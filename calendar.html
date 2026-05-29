@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Calendar</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--white);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .month-nav button {
+            background: var(--cream);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.2s ease;
+        }
+
+        .month-nav button:hover {
+            background: var(--sage);
+            color: white;
+        }
+
+        .month-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .calendar-grid {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .calendar-header-day {
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 0;
+        }
+
+        .calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-cell {
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 3px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--cream);
+        }
+
+        .calendar-cell:hover {
+            background: var(--soft-pink);
+        }
+
+        .calendar-cell.other-month {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .calendar-cell.past {
+            opacity: 0.35;
+        }
+
+        .calendar-cell.free-day {
+            background: linear-gradient(135deg, #F3E8FF 0%, #FCE7F3 100%);
+        }
+
+        .calendar-cell.today {
+            background: linear-gradient(135deg, var(--sage) 0%, var(--lavender-soft) 100%);
+        }
+
+        .calendar-cell.today .cell-date {
+            color: white;
+            font-weight: 600;
+        }
+
+        .cell-date {
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+
+        .cell-events {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: 100%;
+            padding: 0 2px;
+            flex: 1;
+            justify-content: flex-start;
+        }
+
+        .cell-event {
+            font-size: 0.5rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            font-weight: 600;
+        }
+
+        .event-opening {
+            background: #C8E6C9;
+            color: #2E7D32;
+        }
+
+        .event-closing {
+            background: #FFCCBC;
+            color: #BF360C;
+        }
+
+        .event-custom {
+            background: #E1BEE7;
+            color: #6A1B9A;
+        }
+
+        .event-upper {
+            background: #BBDEFB;
+            color: #1565C0;
+        }
+
+        .event-lower {
+            background: #F8BBD9;
+            color: #AD1457;
+        }
+
+        .event-lower2 {
+            background: #B2DFDB;
+            color: #00695C;
+        }
+
+        .event-course {
+            background: #FFE0B2;
+            color: #E65100;
+        }
+
+        .event-mealprep {
+            background: var(--mealprep);
+            color: #7C5C2C;
+        }
+
+        .event-shopping {
+            background: #B3E5FC;
+            color: #0277BD;
+        }
+
+        /* Gym blocks section */
+        .gym-blocks {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .gym-blocks-header {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .gym-blocks-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .gym-block {
+            padding: 10px 8px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: grab;
+            transition: all 0.2s ease;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .gym-block:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        .gym-block.selected {
+            box-shadow: 0 0 0 3px var(--sage);
+            transform: scale(1.05);
+        }
+
+        .gym-block-upper {
+            background: #BBDEFB;
+            color: #1565C0;
+        }
+
+        .gym-block-lower {
+            background: #F8BBD9;
+            color: #AD1457;
+        }
+
+        .gym-block-lower2 {
+            background: #B2DFDB;
+            color: #00695C;
+        }
+
+        .gym-block-course {
+            background: #FFE0B2;
+            color: #E65100;
+        }
+
+        .legend-card {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            background: var(--white);
+            border-radius: 16px;
+            margin-top: 16px;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: var(--text);
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        .legend-opening { background: #C8E6C9; }
+        .legend-closing { background: #FFCCBC; }
+        .legend-custom { background: #E1BEE7; }
+        .legend-free { background: linear-gradient(135deg, #F3E8FF 0%, #FCE7F3 100%); }
+        .legend-mealprep { background: var(--mealprep); }
+
+        /* Day detail modal */
+        .day-detail {
+            padding: 8px 0;
+        }
+
+        .day-detail-date {
+            font-size: 1.4rem;
+            font-weight: 300;
+            color: var(--text-dark);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .work-info {
+            background: var(--cream);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .work-info-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+
+        .work-info-shift {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .work-info-time {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .section-divider {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin: 14px 0 10px;
+            text-align: center;
+        }
+
+        .gym-select-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .gym-select-btn {
+            padding: 12px 8px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .gym-select-btn.active {
+            border-color: var(--text-dark);
+        }
+
+        .gym-select-upper {
+            background: #BBDEFB;
+            color: #1565C0;
+        }
+
+        .gym-select-lower {
+            background: #F8BBD9;
+            color: #AD1457;
+        }
+
+        .gym-select-lower2 {
+            background: #B2DFDB;
+            color: #00695C;
+        }
+
+        .gym-select-course {
+            background: #FFE0B2;
+            color: #E65100;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            background: var(--cream);
+            border-radius: 12px;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .toggle-text {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 46px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--blush);
+            transition: .3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--sage);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="main">
+        <header class="header">
+            <h1>Calendar</h1>
+            <p>Plan your days</p>
+        </header>
+
+        <!-- Gym blocks to assign -->
+        <div class="gym-blocks">
+            <div class="gym-blocks-header">Tap a workout, then tap a day</div>
+            <div class="gym-blocks-row">
+                <div class="gym-block gym-block-upper" onclick="selectGymBlock('upper')">Haut du corps</div>
+                <div class="gym-block gym-block-lower" onclick="selectGymBlock('lower')">Bas du corps</div>
+                <div class="gym-block gym-block-lower2" onclick="selectGymBlock('lower2')">Bas 2</div>
+                <div class="gym-block gym-block-course" onclick="selectGymBlock('course')">Course</div>
+            </div>
+        </div>
+
+        <!-- Month navigation -->
+        <div class="month-nav">
+            <button onclick="prevMonth()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+            <span class="month-name" id="monthName"></span>
+            <button onclick="nextMonth()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="calendar-grid">
+            <div class="calendar-header">
+                <div class="calendar-header-day">Mon</div>
+                <div class="calendar-header-day">Tue</div>
+                <div class="calendar-header-day">Wed</div>
+                <div class="calendar-header-day">Thu</div>
+                <div class="calendar-header-day">Fri</div>
+                <div class="calendar-header-day">Sat</div>
+                <div class="calendar-header-day">Sun</div>
+            </div>
+            <div class="calendar-body" id="calendarBody"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend-card">
+            <div class="legend-item">
+                <div class="legend-color legend-free"></div>
+                <span>Off</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-opening"></div>
+                <span>Open</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-closing"></div>
+                <span>Close</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-custom"></div>
+                <span>Full</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-mealprep"></div>
+                <span>Prep</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Modal -->
+    <div class="modal-overlay" id="dayModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="day-detail">
+                <div class="day-detail-date" id="modalDate"></div>
+
+                <!-- Work info (read-only) -->
+                <div class="work-info" id="workInfo" style="display: none;">
+                    <div class="work-info-label">Work</div>
+                    <div class="work-info-shift" id="workShiftType"></div>
+                    <div class="work-info-time" id="workShiftTime"></div>
+                </div>
+
+                <div class="section-divider">Gym Session</div>
+                <div class="gym-select-grid">
+                    <button class="gym-select-btn gym-select-upper" id="btnUpper" onclick="toggleGym('upper')">Haut du corps</button>
+                    <button class="gym-select-btn gym-select-lower" id="btnLower" onclick="toggleGym('lower')">Bas du corps</button>
+                    <button class="gym-select-btn gym-select-lower2" id="btnLower2" onclick="toggleGym('lower2')">Bas du corps 2</button>
+                    <button class="gym-select-btn gym-select-course" id="btnCourse" onclick="toggleGym('course')">Course</button>
+                </div>
+
+                <div class="section-divider">Other</div>
+                <div class="toggle-item">
+                    <div class="toggle-label">
+                        <div class="toggle-color" style="background: var(--mealprep);"></div>
+                        <span class="toggle-text">Meal Prep</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleMealPrep" onchange="saveDay()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn btn-secondary mt-20" onclick="closeModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav">
+        <a href="index.html">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+            </svg>
+            Budget
+        </a>
+        <a href="groceries.html">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            Groceries
+        </a>
+        <a href="calendar.html" class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Calendar
+        </a>
+    </nav>
+
+    <script>
+        // Work schedule
+        const workSchedule = {
+            // MAY 2026
+            '2026-05-04': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-06': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-07': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-08': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-09': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-10': { type: 'custom', time: '11h00-19h00' },
+            '2026-05-11': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-12': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-14': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-15': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-16': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-17': { type: 'custom', time: '11h00-19h00' },
+            '2026-05-18': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-19': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-20': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-21': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-22': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-23': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-24': { type: 'custom', time: '11h00-19h00' },
+            '2026-05-25': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-26': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-28': { type: 'opening', time: '10h20-18h20' },
+            '2026-05-29': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-30': { type: 'closing', time: '11h40-19h40' },
+            '2026-05-31': { type: 'custom', time: '11h00-19h00' },
+            // JUNE 2026
+            '2026-06-01': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-03': { type: 'custom', time: '10h20-19h20' },
+            '2026-06-04': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-05': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-06': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-08': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-09': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-10': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-11': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-12': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-14': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-15': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-16': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-17': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-19': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-20': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-21': { type: 'custom', time: '11h00-19h00' },
+            '2026-06-22': { type: 'opening', time: '10h20-18h20' },
+            '2026-06-24': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-25': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-29': { type: 'closing', time: '11h40-19h40' },
+            '2026-06-30': { type: 'closing', time: '11h40-19h40' }
+        };
+
+        // State - start on May 2026
+        let currentDate = new Date();
+        let currentMonth = 4; // May (0-indexed)
+        let currentYear = 2026;
+        let selectedDate = null;
+        let selectedGymBlock = null;
+
+        let events = JSON.parse(localStorage.getItem('calendarEvents')) || {};
+
+        // Save events
+        function saveEvents() {
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+        }
+
+        // Get date key
+        function getDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // Get work shift
+        function getWorkShift(dateKey) {
+            return workSchedule[dateKey] || null;
+        }
+
+        // Select gym block for quick assignment
+        function selectGymBlock(type) {
+            const blocks = document.querySelectorAll('.gym-block');
+            blocks.forEach(b => b.classList.remove('selected'));
+
+            if (selectedGymBlock === type) {
+                selectedGymBlock = null;
+            } else {
+                selectedGymBlock = type;
+                document.querySelector(`.gym-block-${type}`).classList.add('selected');
+            }
+        }
+
+        // Navigation
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // Handle day click
+        function handleDayClick(dateKey) {
+            // If a gym block is selected, assign it directly
+            if (selectedGymBlock) {
+                if (!events[dateKey]) events[dateKey] = {};
+
+                // Toggle: if same gym type already there, remove it
+                if (events[dateKey].gym === selectedGymBlock) {
+                    events[dateKey].gym = null;
+                } else {
+                    events[dateKey].gym = selectedGymBlock;
+                }
+
+                saveEvents();
+                renderCalendar();
+                            } else {
+                // Open modal for detailed editing
+                openDay(dateKey);
+            }
+        }
+
+        // Open day modal
+        function openDay(dateKey) {
+            selectedDate = dateKey;
+            const date = new Date(dateKey);
+            const options = { weekday: 'long', month: 'short', day: 'numeric' };
+            document.getElementById('modalDate').textContent = date.toLocaleDateString('en-US', options);
+
+            // Work info
+            const workShift = getWorkShift(dateKey);
+            const workInfoEl = document.getElementById('workInfo');
+            if (workShift) {
+                workInfoEl.style.display = 'block';
+                let shiftTypeLabel;
+                if (workShift.type === 'opening') shiftTypeLabel = 'Opening';
+                else if (workShift.type === 'closing') shiftTypeLabel = 'Closing';
+                else if (workShift.time === '11h00-19h00') shiftTypeLabel = 'Full Day';
+                else shiftTypeLabel = 'Special';
+                document.getElementById('workShiftType').textContent = shiftTypeLabel;
+                document.getElementById('workShiftTime').textContent = workShift.time;
+            } else {
+                workInfoEl.style.display = 'none';
+            }
+
+            // Gym selection
+            const dayEvents = events[dateKey] || {};
+            document.getElementById('btnUpper').classList.toggle('active', dayEvents.gym === 'upper');
+            document.getElementById('btnLower').classList.toggle('active', dayEvents.gym === 'lower');
+            document.getElementById('btnLower2').classList.toggle('active', dayEvents.gym === 'lower2');
+            document.getElementById('btnCourse').classList.toggle('active', dayEvents.gym === 'course');
+
+            document.getElementById('toggleMealPrep').checked = dayEvents.mealprep || false;
+
+            document.getElementById('dayModal').classList.add('active');
+        }
+
+        // Toggle gym in modal
+        function toggleGym(type) {
+            if (!selectedDate) return;
+            if (!events[selectedDate]) events[selectedDate] = {};
+
+            // Toggle off if same
+            if (events[selectedDate].gym === type) {
+                events[selectedDate].gym = null;
+            } else {
+                events[selectedDate].gym = type;
+            }
+
+            // Update buttons
+            document.getElementById('btnUpper').classList.toggle('active', events[selectedDate].gym === 'upper');
+            document.getElementById('btnLower').classList.toggle('active', events[selectedDate].gym === 'lower');
+            document.getElementById('btnLower2').classList.toggle('active', events[selectedDate].gym === 'lower2');
+            document.getElementById('btnCourse').classList.toggle('active', events[selectedDate].gym === 'course');
+
+            saveEvents();
+            renderCalendar();
+                    }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('dayModal').classList.remove('active');
+            selectedDate = null;
+        }
+
+        // Save day (for meal prep toggle)
+        function saveDay() {
+            if (!selectedDate) return;
+            if (!events[selectedDate]) events[selectedDate] = {};
+
+            events[selectedDate].mealprep = document.getElementById('toggleMealPrep').checked;
+
+            saveEvents();
+            renderCalendar();
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+
+            document.getElementById('monthName').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const container = document.getElementById('calendarBody');
+            container.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+            let startDay = firstDay.getDay();
+            startDay = startDay === 0 ? 6 : startDay - 1;
+
+            const today = new Date();
+            const todayKey = getDateKey(today);
+
+            // Previous month days
+            const prevMonthLastDay = new Date(currentYear, currentMonth, 0);
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = prevMonthLastDay.getDate() - i;
+                const date = new Date(currentYear, currentMonth - 1, day);
+                const key = getDateKey(date);
+                container.innerHTML += renderCell(key, day, true, false);
+            }
+
+            // Current month days
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const key = getDateKey(date);
+                const isToday = key === todayKey;
+                container.innerHTML += renderCell(key, day, false, isToday);
+            }
+
+            // Next month days
+            const totalCells = container.children.length;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let day = 1; day <= remainingCells; day++) {
+                const date = new Date(currentYear, currentMonth + 1, day);
+                const key = getDateKey(date);
+                container.innerHTML += renderCell(key, day, true, false);
+            }
+        }
+
+        function renderCell(key, day, isOtherMonth, isToday) {
+            const dayEvents = events[key] || {};
+            const workShift = getWorkShift(key);
+
+            const cellDate = new Date(key);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const isPast = cellDate < today;
+
+            const hasScheduleData = (cellDate.getFullYear() === 2026 &&
+                                    (cellDate.getMonth() === 4 || cellDate.getMonth() === 5));
+            const isFreeDay = hasScheduleData && !workShift && !isOtherMonth;
+
+            let classes = 'calendar-cell';
+            if (isOtherMonth) classes += ' other-month';
+            if (isPast && !isOtherMonth) classes += ' past';
+            if (isFreeDay && !isToday) classes += ' free-day';
+            if (isToday) classes += ' today';
+
+            let eventsHtml = '';
+
+            // Work shift
+            if (workShift) {
+                let shiftLabel;
+                if (workShift.type === 'opening') shiftLabel = 'Open';
+                else if (workShift.type === 'closing') shiftLabel = 'Close';
+                else if (workShift.time === '11h00-19h00') shiftLabel = 'Full';
+                else shiftLabel = 'Special';
+                eventsHtml += `<span class="cell-event event-${workShift.type}">${shiftLabel}</span>`;
+            }
+
+            // Gym
+            if (dayEvents.gym) {
+                const gymLabels = {
+                    'upper': 'Haut',
+                    'lower': 'Bas',
+                    'lower2': 'Bas 2',
+                    'course': 'Course'
+                };
+                eventsHtml += `<span class="cell-event event-${dayEvents.gym}">${gymLabels[dayEvents.gym]}</span>`;
+            }
+
+            // Meal prep
+            if (dayEvents.mealprep) {
+                eventsHtml += '<span class="cell-event event-mealprep">Prep</span>';
+            }
+
+            // Shopping
+            if (dayEvents.shopping) {
+                eventsHtml += '<span class="cell-event event-shopping">Shop</span>';
+            }
+
+            return `
+                <div class="${classes}" onclick="handleDayClick('${key}')">
+                    <span class="cell-date">${day}</span>
+                    <div class="cell-events">
+                        ${eventsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Close modal on outside click
+        document.getElementById('dayModal').addEventListener('click', (e) => {
+            if (e.target.id === 'dayModal') closeModal();
+        });
+
+        // Initialize
+        renderCalendar();
+            </script>
+</body>
+</html>

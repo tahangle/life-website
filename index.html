@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Budget</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-dark);
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Hero available section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--sage) 0%, #7BA896 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            color: white;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 30px;
+            align-items: center;
+        }
+
+        @media (max-width: 700px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        .hero-available {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .hero-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .hero-section.warning {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+
+        .hero-section.danger {
+            background: linear-gradient(135deg, #E53935 0%, #C62828 100%);
+        }
+
+        /* Main layout */
+        .main-layout {
+            display: grid;
+            gap: 24px;
+        }
+
+        @media (min-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr 400px;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        /* Bar chart */
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 80px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        @media (max-width: 500px) {
+            .bar-row {
+                grid-template-columns: 80px 1fr 60px;
+            }
+        }
+
+        .bar-label {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .bar-track {
+            height: 28px;
+            background: var(--cream);
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 14px;
+            transition: width 0.5s ease;
+        }
+
+        .bar-housing { background: linear-gradient(90deg, #E8B4B8, #D4A0A5); }
+        .bar-subscriptions { background: linear-gradient(90deg, #B8D4E3, #9CC0D4); }
+        .bar-debt { background: linear-gradient(90deg, #D4B8E3, #C4A5D9); }
+        .bar-onhold { background: linear-gradient(90deg, #FFD699, #FFC266); }
+        .bar-spent { background: linear-gradient(90deg, #FF8A80, #FF5252); }
+
+        .bar-amount {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: right;
+        }
+
+        /* Income bar */
+        .income-bar {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--cream);
+        }
+
+        .income-bar .bar-fill {
+            background: linear-gradient(90deg, var(--sage), #7BA896);
+        }
+
+        .income-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* Expense details */
+        .expense-category {
+            margin-bottom: 20px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .category-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-housing { background: #E8B4B8; }
+        .dot-subscriptions { background: #B8D4E3; }
+        .dot-debt { background: #D4B8E3; }
+        .dot-onhold { background: #FFD699; }
+
+        .category-total {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--cream);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .expense-item.faded {
+            opacity: 0.5;
+            background: var(--lavender-soft);
+        }
+
+        .expense-name {
+            color: var(--text-dark);
+        }
+
+        .expense-date {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            margin-left: 8px;
+        }
+
+        .expense-amount {
+            font-weight: 500;
+        }
+
+        /* Spending input */
+        .spend-section {
+            margin-top: 24px;
+        }
+
+        .spend-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 10px;
+        }
+
+        .input {
+            padding: 12px;
+            border: 2px solid var(--cream);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--sage);
+        }
+
+        .btn {
+            background: var(--sage);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--sage-dark);
+        }
+
+        /* Waiting queue */
+        .queue-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            padding: 14px;
+            background: var(--cream);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .queue-item.ready {
+            background: #FFF8E1;
+            border: 2px solid #FFB300;
+        }
+
+        .queue-item-name {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .queue-item-meta {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .queue-item-amount {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .queue-item-timer {
+            font-size: 0.7rem;
+            color: var(--sage-dark);
+            margin-top: 4px;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-approve {
+            background: var(--sage);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .btn-reject {
+            background: var(--cream);
+            color: var(--text);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .btn-reject:hover {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        /* Spent list */
+        .spent-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #FFEBEE;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+
+        .spent-item-name {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+        }
+
+        .spent-item-amount {
+            color: #C62828;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            stroke: var(--blush);
+            margin-bottom: 12px;
+        }
+
+        /* Daily feedback */
+        .daily-feedback {
+            display: none;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            transition: opacity 0.3s ease;
+        }
+
+        .daily-feedback.over {
+            background: #FFEBEE;
+            border-left: 4px solid #C62828;
+            color: #5D4037;
+        }
+
+        .daily-feedback.ok {
+            background: #E8F5E9;
+            border-left: 4px solid var(--sage);
+            color: #2E7D32;
+        }
+
+        .feedback-bad {
+            font-weight: 700;
+            color: #C62828;
+        }
+
+        .feedback-good {
+            font-weight: 700;
+            color: #2E7D32;
+        }
+
+        /* Wishlist */
+        .wishlist-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .wishlist-form input {
+            padding: 10px 12px;
+            border: 1px solid var(--cream);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .wishlist-form input:focus {
+            outline: none;
+            border-color: var(--blush);
+        }
+
+        .wishlist-row {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 10px;
+        }
+
+        .wishlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--sage);
+        }
+
+        .wishlist-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .wishlist-item-name {
+            font-weight: 500;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wishlist-item-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .wishlist-item-name a:hover {
+            text-decoration: underline;
+        }
+
+        .wishlist-item-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-left: 12px;
+            white-space: nowrap;
+        }
+
+        .wishlist-item-remove {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 8px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .wishlist-item-remove:hover {
+            opacity: 1;
+            color: #C62828;
+        }
+
+        .wishlist-total {
+            text-align: right;
+            padding-top: 12px;
+            border-top: 2px dashed var(--cream);
+            margin-top: 8px;
+        }
+
+        .wishlist-total-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .wishlist-total-amount {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Expense delete button */
+        .expense-delete {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 2px;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .expense-delete:hover {
+            opacity: 1;
+            color: #C62828;
+        }
+
+        /* Warning banner */
+        .warning-banner {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 14px;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .warning-banner-title {
+            font-weight: 600;
+            color: #E65100;
+            margin-bottom: 4px;
+        }
+
+        .warning-banner-text {
+            font-size: 0.85rem;
+            color: #5D4037;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header class="page-header">
+            <h1 class="page-title">Budget</h1>
+            <p class="page-subtitle">May - June 2026</p>
+        </header>
+
+        <!-- Hero: Available money -->
+        <div class="hero-section" id="heroSection">
+            <div>
+                <div class="hero-available" id="availableAmount">€996.86</div>
+                <div class="hero-label">free to spend</div>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" id="perDay">€29.32</div>
+                    <div class="hero-stat-label">per day</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">34</div>
+                    <div class="hero-stat-label">days left</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- Left: Visual breakdown -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Where Your Money Goes</div>
+
+                    <!-- Spending progress bar -->
+                    <div class="income-bar">
+                        <div class="bar-row">
+                            <span class="bar-label">Spent</span>
+                            <div class="bar-track" style="background: linear-gradient(90deg, var(--sage) 0%, #7BA896 100%);">
+                                <div class="bar-fill" id="spentBar" style="width: 0%; background: linear-gradient(90deg, #FF5252, #C62828);"></div>
+                            </div>
+                            <span class="bar-amount" id="spentAmount">€0</span>
+                        </div>
+                        <div class="income-label" id="spentLabel">0% of €2,152 paycheck spent</div>
+                    </div>
+
+                    <!-- Category bars (fixed) -->
+                    <div class="bar-chart">
+                        <div class="bar-row">
+                            <span class="bar-label">Housing</span>
+                            <div class="bar-track">
+                                <div class="bar-fill bar-housing" style="width: 30.4%;"></div>
+                            </div>
+                            <span class="bar-amount">€654</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Subscriptions</span>
+                            <div class="bar-track">
+                                <div class="bar-fill bar-subscriptions" style="width: 6.6%;"></div>
+                            </div>
+                            <span class="bar-amount">€141</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Debt</span>
+                            <div class="bar-track">
+                                <div class="bar-fill bar-debt" style="width: 7%;"></div>
+                            </div>
+                            <span class="bar-amount">€150</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">On Hold</span>
+                            <div class="bar-track">
+                                <div class="bar-fill bar-onhold" style="width: 9.8%;"></div>
+                            </div>
+                            <span class="bar-amount">€210</span>
+                        </div>
+                        <!-- Dynamic spending categories added here -->
+                        <div id="spendingBars"></div>
+                    </div>
+                </div>
+
+                <!-- Expense details -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-title">Expenses Details</div>
+
+                    <div class="expense-category">
+                        <div class="category-header">
+                            <div class="category-title">
+                                <span class="category-dot dot-housing"></span>
+                                Housing
+                            </div>
+                            <span class="category-total">€654</span>
+                        </div>
+                        <div class="expense-item">
+                            <span class="expense-name">Rent <span class="expense-date">Before June 1st</span></span>
+                            <span class="expense-amount">€654.00</span>
+                        </div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-header">
+                            <div class="category-title">
+                                <span class="category-dot dot-subscriptions"></span>
+                                Subscriptions
+                            </div>
+                            <span class="category-total">€141.14</span>
+                        </div>
+                        <div class="expense-item">
+                            <span class="expense-name">Spotify <span class="expense-date">30th</span></span>
+                            <span class="expense-amount">€12.14</span>
+                        </div>
+                        <div class="expense-item">
+                            <span class="expense-name">Free Mobile <span class="expense-date">Monthly</span></span>
+                            <span class="expense-amount">€29.00</span>
+                        </div>
+                        <div class="expense-item">
+                            <span class="expense-name">Gym <span class="expense-date">5th</span></span>
+                            <span class="expense-amount">€100.00</span>
+                        </div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-header">
+                            <div class="category-title">
+                                <span class="category-dot dot-debt"></span>
+                                Debt
+                            </div>
+                            <span class="category-total">€150</span>
+                        </div>
+                        <div class="expense-item">
+                            <span class="expense-name">Orlando <span class="expense-date">Now</span></span>
+                            <span class="expense-amount">€150.00</span>
+                        </div>
+                        <div class="expense-item faded">
+                            <span class="expense-name">Orlando (remaining) <span class="expense-date">Later</span></span>
+                            <span class="expense-amount">€150.00</span>
+                        </div>
+                    </div>
+
+                    <div class="expense-category">
+                        <div class="category-header">
+                            <div class="category-title">
+                                <span class="category-dot dot-onhold"></span>
+                                On Hold
+                            </div>
+                            <span class="category-total">€350</span>
+                        </div>
+                        <div class="expense-item">
+                            <span class="expense-name">Plane ticket <span class="expense-date">Before July</span></span>
+                            <span class="expense-amount">€210.00</span>
+                        </div>
+                        <div class="expense-item faded">
+                            <span class="expense-name">Add cat to flight <span class="expense-date">July paycheck</span></span>
+                            <span class="expense-amount">€140.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic spending categories -->
+                    <div id="spendingCategories"></div>
+                </div>
+            </div>
+
+            <!-- Right: Spending control -->
+            <div>
+                <!-- Smart expense input -->
+                <div class="card">
+                    <div class="card-title">Log an expense</div>
+                    <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px;">
+                        Just type naturally, I'll figure it out
+                    </p>
+                    <textarea class="input" id="expenseText" rows="2" placeholder="e.g. yesterday spent 15€ on lunch with friends" style="resize: none; font-family: inherit;"></textarea>
+                    <div id="parsedPreview" style="display: none; margin-top: 12px; padding: 12px; background: var(--cream); border-radius: 10px;">
+                        <div style="font-size: 0.75rem; color: var(--text-light); margin-bottom: 8px;">I understood:</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div id="parsedName" style="font-weight: 500;"></div>
+                                <div id="parsedMeta" style="font-size: 0.75rem; color: var(--text-light);"></div>
+                            </div>
+                            <div id="parsedAmount" style="font-size: 1.2rem; font-weight: 600;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button class="btn" style="flex: 1; background: var(--sage);" onclick="confirmExpense(false)">Add to Queue (3 days)</button>
+                        <button class="btn" style="flex: 1; background: #FF8A65;" onclick="confirmExpense(true)">Log Now</button>
+                    </div>
+                    <div id="dailyFeedback" class="daily-feedback"></div>
+                    <p style="font-size: 0.7rem; color: var(--text-light); margin-top: 8px; text-align: center;">
+                        "Add to Queue" = wait 3 days before it counts (impulse control)<br>
+                        "Log Now" = already spent, add immediately
+                    </p>
+                </div>
+
+                <!-- Waiting queue -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-title">Waiting Queue</div>
+                    <div id="waitingQueue"></div>
+                    <div id="emptyWaiting" class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>No items waiting</p>
+                    </div>
+                </div>
+
+                <!-- Wishlist -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-title">Wishlist</div>
+                    <div class="wishlist-form">
+                        <input type="text" id="wishlistName" placeholder="What do you want?">
+                        <div class="wishlist-row">
+                            <input type="text" id="wishlistLink" placeholder="Link (optional)">
+                            <input type="number" id="wishlistPrice" placeholder="Price €">
+                        </div>
+                        <button class="btn" style="background: #FFB74D;" onclick="addWishlistItem()">Add to Wishlist</button>
+                    </div>
+                    <div id="wishlistItems"></div>
+                    <div id="wishlistTotal" class="wishlist-total" style="display: none;">
+                        <div class="wishlist-total-label">Total wishlist value</div>
+                        <div class="wishlist-total-amount" id="wishlistTotalAmount">€0</div>
+                    </div>
+                    <div id="emptyWishlist" class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                        </svg>
+                        <p>Your wishlist is empty</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <a href="index.html" class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+            </svg>
+            Budget
+        </a>
+        <a href="groceries.html">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            Food
+        </a>
+        <a href="calendar.html">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Calendar
+        </a>
+    </nav>
+
+    <script>
+        const budget = {
+            income: 2152,
+            fixedExpenses: 945.14,
+            onHold: 210,
+            baseAvailable: 996.86
+        };
+
+        let state = {
+            waitingQueue: [],
+            spentExpenses: [],
+            totalSpent: 0,
+            wishlist: []
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem('budgetState2');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state = {
+                    waitingQueue: parsed.waitingQueue || [],
+                    spentExpenses: parsed.spentExpenses || [],
+                    totalSpent: parsed.totalSpent || 0,
+                    wishlist: parsed.wishlist || []
+                };
+            }
+            render();
+        }
+
+        function saveState() {
+            localStorage.setItem('budgetState2', JSON.stringify(state));
+        }
+
+        function getAvailable() {
+            return budget.baseAvailable - state.totalSpent;
+        }
+
+        function formatCurrency(amt) {
+            return '€' + amt.toFixed(2);
+        }
+
+        // Smart expense parsing
+        let parsedExpense = null;
+
+        const categoryKeywords = {
+            coffee: ['coffee', 'cafe', 'café', 'kitsune', 'starbucks', 'coutume', 'latte', 'espresso', 'cappuccino'],
+            food: ['lunch', 'dinner', 'breakfast', 'restaurant', 'eat', 'meal', 'pizza', 'burger', 'sushi', 'brunch', 'food'],
+            drinks: ['drink', 'drinks', 'bar', 'beer', 'wine', 'cocktail', 'apero', 'apéro', 'alcohol', 'pub', 'soirée'],
+            transport: ['uber', 'taxi', 'metro', 'bus', 'train', 'bolt', 'lyft', 'transport', 'ticket', 'navigo', 'velib'],
+            clothing: ['clothes', 'shirt', 'pants', 'dress', 'shoes', 'jacket', 'zara', 'hm', 'uniqlo', 'mango', 'clothing', 'vetement', 'cos', 'arket'],
+            health: ['pharmacy', 'medicine', 'doctor', 'dentist', 'health', 'vitamins', 'pharmacie'],
+            social: ['friends', 'party', 'gift', 'cadeau', 'birthday', 'sortie', 'cinema', 'movie', 'concert'],
+            beauty: ['makeup', 'skincare', 'haircut', 'nails', 'coiffeur', 'sephora', 'beauty'],
+            home: ['ikea', 'home', 'maison', 'cleaning', 'household', 'monoprix'],
+            snacks: ['snack', 'boulangerie', 'croissant', 'pastry', 'pain'],
+            personal: ['amazon', 'online', 'subscription', 'book', 'livre']
+        };
+
+        function parseExpenseText(text) {
+            const originalText = text;
+            text = text.toLowerCase().trim();
+            if (!text) return null;
+
+            // Extract amount
+            const amountPatterns = [
+                /(\d+[.,]?\d*)\s*[€e]/i,
+                /[€]\s*(\d+[.,]?\d*)/i,
+                /(\d+[.,]?\d*)\s*euros?/i,
+                /spent\s*(\d+[.,]?\d*)/i,
+                /(\d+[.,]?\d*)\s*(?:on|for)/i
+            ];
+
+            let amount = null;
+            for (const pattern of amountPatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    amount = parseFloat(match[1].replace(',', '.'));
+                    break;
+                }
+            }
+
+            if (!amount) return null;
+
+            // Detect category - check specific categories first, then broader ones
+            // Use word boundary matching for accuracy
+            let category = 'other';
+            const categoryPriority = [
+                'coffee', 'drinks', 'snacks', 'transport', 'clothing',
+                'health', 'beauty', 'home', 'personal', 'social', 'food'
+            ];
+
+            for (const cat of categoryPriority) {
+                const keywords = categoryKeywords[cat];
+                if (keywords && keywords.some(kw => {
+                    const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                    return regex.test(text);
+                })) {
+                    category = cat;
+                    break;
+                }
+            }
+
+            // Smart description extraction
+            let description = '';
+            let context = '';
+
+            // Extract "with X" or "for X" context
+            const contextMatch = text.match(/(?:with|for)\s+(colleagues?|friends?|family|team|work|myself|me|[a-z]+)/i);
+            if (contextMatch) {
+                context = contextMatch[1];
+            }
+
+            // Look for place names in parentheses: (cafe kitsune)
+            const parenMatch = originalText.match(/\(([^)]+)\)/i);
+            if (parenMatch) {
+                let content = parenMatch[1].trim();
+                description = content.split(' ')
+                    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                    .join(' ');
+            }
+
+            // Look for "at X" or "@ X" pattern
+            if (!description) {
+                const atMatch = text.match(/(?:at|@)\s+([a-z][a-z\s]+?)(?:\s+with|\s+for|\s*$)/i);
+                if (atMatch) {
+                    description = atMatch[1].trim().split(' ')
+                        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                        .join(' ');
+                }
+            }
+
+            // Look for known place names (capitalized words, excluding common words)
+            if (!description) {
+                const ignoreWords = ['I', 'A', 'The', 'On', 'For', 'With', 'Had', 'To', 'Of', 'And', 'My', 'Was', 'At', 'It', 'Yesterday', 'Today', 'Spent', 'Euros', 'Euro', 'Just', 'Some', 'This', 'That'];
+                const placeMatches = originalText.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g);
+                if (placeMatches) {
+                    const place = placeMatches.find(p => !ignoreWords.includes(p) && p.length > 2);
+                    if (place) description = place;
+                }
+            }
+
+            // Build final description
+            const catName = category.charAt(0).toUpperCase() + category.slice(1);
+            if (description && context) {
+                description = description + ' with ' + context;
+            } else if (description) {
+                // Keep description as is
+            } else if (context) {
+                description = catName + ' with ' + context;
+            } else {
+                description = catName;
+            }
+
+            // Detect date
+            let date = new Date();
+            if (text.includes('yesterday')) {
+                date.setDate(date.getDate() - 1);
+            }
+
+            return { amount, category, description, date };
+        }
+
+        // Live preview as user types
+        document.getElementById('expenseText').addEventListener('input', function() {
+            const parsed = parseExpenseText(this.value);
+            const preview = document.getElementById('parsedPreview');
+
+            if (parsed) {
+                parsedExpense = parsed;
+                document.getElementById('parsedName').textContent = parsed.description;
+                document.getElementById('parsedMeta').textContent = `${parsed.category} • ${parsed.date.toLocaleDateString()}`;
+                document.getElementById('parsedAmount').textContent = formatCurrency(parsed.amount);
+                preview.style.display = 'block';
+            } else {
+                parsedExpense = null;
+                preview.style.display = 'none';
+            }
+        });
+
+        function getTodaySpending() {
+            const today = new Date().toDateString();
+            return state.spentExpenses
+                .filter(e => new Date(e.date || e.approvedAt).toDateString() === today)
+                .reduce((sum, e) => sum + e.amount, 0);
+        }
+
+        function showDailyFeedback(expenseAmount) {
+            const available = getAvailable();
+            const dailyLimit = available / 34;
+            const todaySpent = getTodaySpending();
+
+            const feedback = document.getElementById('dailyFeedback');
+
+            if (todaySpent > dailyLimit) {
+                const over = todaySpent - dailyLimit;
+                feedback.innerHTML = `<span class="feedback-bad">Over daily limit by €${over.toFixed(2)}</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} limit)`;
+                feedback.className = 'daily-feedback over';
+            } else {
+                const remaining = dailyLimit - todaySpent;
+                feedback.innerHTML = `<span class="feedback-good">€${remaining.toFixed(2)} left today</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} limit)`;
+                feedback.className = 'daily-feedback ok';
+            }
+
+            feedback.style.display = 'block';
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                    feedback.style.opacity = '1';
+                }, 300);
+            }, 5000);
+        }
+
+        function confirmExpense(immediate) {
+            if (!parsedExpense) {
+                alert('Could not understand that. Try something like "15€ lunch" or "spent 20 euros on uber"');
+                return;
+            }
+
+            const expense = {
+                id: Date.now(),
+                name: parsedExpense.description,
+                amount: parsedExpense.amount,
+                category: parsedExpense.category,
+                date: parsedExpense.date.toISOString(),
+                addedAt: new Date().toISOString()
+            };
+
+            if (immediate) {
+                // Log immediately
+                state.spentExpenses.push({ ...expense, approvedAt: expense.date });
+                state.totalSpent += expense.amount;
+            } else {
+                // Add to waiting queue
+                state.waitingQueue.push(expense);
+            }
+
+            // Clear input
+            document.getElementById('expenseText').value = '';
+            document.getElementById('parsedPreview').style.display = 'none';
+            parsedExpense = null;
+
+            saveState();
+            render();
+
+            // Show daily limit feedback
+            if (immediate) {
+                showDailyFeedback(expense.amount);
+            }
+        }
+
+        function approveExpense(id) {
+            const item = state.waitingQueue.find(e => e.id === id);
+            if (!item) return;
+
+            const available = getAvailable();
+            if (item.amount > available) {
+                if (!confirm(`This is €${(item.amount - available).toFixed(2)} over budget! Continue?`)) return;
+            }
+
+            state.spentExpenses.push({ ...item, approvedAt: new Date().toISOString() });
+            state.totalSpent += item.amount;
+            state.waitingQueue = state.waitingQueue.filter(e => e.id !== id);
+            saveState();
+            render();
+        }
+
+        function rejectExpense(id) {
+            state.waitingQueue = state.waitingQueue.filter(e => e.id !== id);
+            saveState();
+            render();
+        }
+
+        function deleteExpense(id) {
+            const expense = state.spentExpenses.find(e => e.id === id);
+            if (expense) {
+                state.totalSpent -= expense.amount;
+                state.spentExpenses = state.spentExpenses.filter(e => e.id !== id);
+                saveState();
+                render();
+            }
+        }
+
+        // Wishlist categories and colors
+        const wishlistCategories = {
+            clothing: {
+                color: '#5C6BC0',
+                bg: '#E8EAF6',
+                keywords: ['dress', 'shirt', 'pants', 'jeans', 'jacket', 'coat', 'shoes', 'sneakers', 'boots', 'heels', 'bag', 'purse', 'scarf', 'hat', 'sweater', 'skirt', 'blazer', 'top', 'cardigan', 'hoodie', 'shorts', 'sandals', 'clothes', 'outfit', 'bikini', 'swimsuit']
+            },
+            electronics: {
+                color: '#FFA726',
+                bg: '#FFF3E0',
+                keywords: ['phone', 'laptop', 'tablet', 'ipad', 'macbook', 'airpods', 'headphones', 'camera', 'kindle', 'watch', 'charger', 'speaker', 'tv', 'monitor', 'keyboard', 'mouse', 'console', 'playstation', 'nintendo', 'xbox']
+            },
+            home: {
+                color: '#66BB6A',
+                bg: '#E8F5E9',
+                keywords: ['lamp', 'chair', 'table', 'desk', 'shelf', 'mirror', 'rug', 'curtain', 'pillow', 'blanket', 'vase', 'plant', 'frame', 'candle', 'decor', 'furniture', 'sofa', 'bed', 'mattress', 'storage']
+            },
+            kitchen: {
+                color: '#EF5350',
+                bg: '#FFEBEE',
+                keywords: ['blender', 'mixer', 'toaster', 'kettle', 'coffee', 'espresso', 'pot', 'pan', 'knife', 'plates', 'cups', 'glasses', 'utensils', 'cookware', 'airfryer', 'microwave', 'oven']
+            },
+            beauty: {
+                color: '#EC407A',
+                bg: '#FCE4EC',
+                keywords: ['perfume', 'makeup', 'skincare', 'serum', 'cream', 'lipstick', 'mascara', 'foundation', 'palette', 'brush', 'hair', 'dryer', 'straightener', 'curler', 'nail', 'fragrance']
+            },
+            fitness: {
+                color: '#26A69A',
+                bg: '#E0F2F1',
+                keywords: ['yoga', 'mat', 'weights', 'dumbbell', 'gym', 'leggings', 'sports', 'running', 'bike', 'fitness', 'workout', 'sneakers', 'trainer']
+            },
+            books: {
+                color: '#8D6E63',
+                bg: '#EFEBE9',
+                keywords: ['book', 'novel', 'guide', 'journal', 'planner', 'notebook', 'diary', 'magazine']
+            },
+            travel: {
+                color: '#42A5F5',
+                bg: '#E3F2FD',
+                keywords: ['luggage', 'suitcase', 'backpack', 'travel', 'passport', 'adapter', 'trip', 'flight', 'hotel', 'vacation']
+            }
+        };
+
+        function getWishlistCategory(name) {
+            const lower = name.toLowerCase();
+            for (const [cat, data] of Object.entries(wishlistCategories)) {
+                if (data.keywords.some(kw => lower.includes(kw))) {
+                    return { color: data.color, bg: data.bg };
+                }
+            }
+            // Default - soft gray
+            return { color: '#78909C', bg: '#ECEFF1' };
+        }
+
+        // Wishlist functions
+        function addWishlistItem() {
+            const name = document.getElementById('wishlistName').value.trim();
+            const price = parseFloat(document.getElementById('wishlistPrice').value) || 0;
+            const link = document.getElementById('wishlistLink').value.trim();
+
+            if (!name) {
+                alert('Please enter what you want');
+                return;
+            }
+
+            state.wishlist.push({
+                id: Date.now(),
+                name,
+                price,
+                link,
+                addedAt: new Date().toISOString()
+            });
+
+            // Clear form
+            document.getElementById('wishlistName').value = '';
+            document.getElementById('wishlistPrice').value = '';
+            document.getElementById('wishlistLink').value = '';
+
+            saveState();
+            renderWishlist();
+        }
+
+        function removeWishlistItem(id) {
+            state.wishlist = state.wishlist.filter(w => w.id !== id);
+            saveState();
+            renderWishlist();
+        }
+
+        function renderWishlist() {
+            const container = document.getElementById('wishlistItems');
+            const empty = document.getElementById('emptyWishlist');
+            const totalSection = document.getElementById('wishlistTotal');
+
+            if (state.wishlist.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                totalSection.style.display = 'none';
+                return;
+            }
+
+            empty.style.display = 'none';
+            totalSection.style.display = 'block';
+
+            const total = state.wishlist.reduce((sum, w) => sum + (w.price || 0), 0);
+            document.getElementById('wishlistTotalAmount').textContent = '€' + total.toFixed(2);
+
+            container.innerHTML = state.wishlist.map(w => {
+                const cat = getWishlistCategory(w.name);
+                return `
+                <div class="wishlist-item" style="background: ${cat.bg}; border-left-color: ${cat.color};">
+                    <div class="wishlist-item-info">
+                        <div class="wishlist-item-name" style="color: ${cat.color};">
+                            ${w.link ? `<a href="${w.link}" target="_blank">${w.name}</a>` : w.name}
+                            ${w.link ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="${cat.color}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>` : ''}
+                        </div>
+                    </div>
+                    ${w.price ? `<span class="wishlist-item-price" style="color: ${cat.color};">€${w.price.toFixed(2)}</span>` : ''}
+                    <button class="wishlist-item-remove" onclick="removeWishlistItem(${w.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            `}).join('');
+        }
+
+        function getTimeRemaining(addedAt) {
+            const waitUntil = new Date(new Date(addedAt).getTime() + 3 * 24 * 60 * 60 * 1000);
+            const remaining = waitUntil - new Date();
+            if (remaining <= 0) return 'Ready to decide';
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            return hours >= 24 ? `${Math.floor(hours / 24)}d left` : `${hours}h left`;
+        }
+
+        function canDecide(addedAt) {
+            const waitUntil = new Date(new Date(addedAt).getTime() + 3 * 24 * 60 * 60 * 1000);
+            return new Date() >= waitUntil;
+        }
+
+        // Category colors for spending
+        const categoryColors = {
+            coffee: '#795548',
+            food: '#FF7043',
+            drinks: '#7E57C2',
+            transport: '#42A5F5',
+            clothing: '#AB47BC',
+            health: '#66BB6A',
+            social: '#FFA726',
+            beauty: '#EC407A',
+            home: '#8D6E63',
+            snacks: '#FFCA28',
+            personal: '#78909C',
+            other: '#BDBDBD'
+        };
+
+        function render() {
+            const available = getAvailable();
+            const perDay = available / 34;
+
+            // Hero
+            document.getElementById('availableAmount').textContent = formatCurrency(available);
+            document.getElementById('perDay').textContent = formatCurrency(perDay);
+
+            const hero = document.getElementById('heroSection');
+            hero.className = 'hero-section';
+            if (available < 100) hero.classList.add('danger');
+            else if (available < 300) hero.classList.add('warning');
+
+            // Spending progress bar - shows how much of paycheck is spent
+            const totalCommitted = budget.housing + budget.subscriptions + budget.debt + budget.hold;
+            const totalSpentAll = totalCommitted + state.totalSpent;
+            const spentPercent = Math.min((totalSpentAll / budget.income) * 100, 100);
+            document.getElementById('spentBar').style.width = spentPercent + '%';
+            document.getElementById('spentAmount').textContent = '€' + Math.round(totalSpentAll);
+            document.getElementById('spentLabel').textContent = Math.round(spentPercent) + '% of €' + budget.income.toLocaleString() + ' paycheck used';
+
+            renderQueue();
+            renderSpendingCategories();
+            renderWishlist();
+        }
+
+        function renderQueue() {
+            const container = document.getElementById('waitingQueue');
+            const empty = document.getElementById('emptyWaiting');
+
+            if (state.waitingQueue.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+
+            container.innerHTML = state.waitingQueue.map(e => {
+                const ready = canDecide(e.addedAt);
+                const overBudget = e.amount > getAvailable();
+
+                return `
+                    <div class="queue-item ${ready ? 'ready' : ''}">
+                        <div>
+                            <div class="queue-item-name">${e.name}</div>
+                            <div class="queue-item-meta">${e.category}${overBudget ? ' • <span style="color:#C62828;">over budget!</span>' : ''}</div>
+                            ${ready ? `
+                                <div class="queue-actions">
+                                    <button class="btn-reject" onclick="rejectExpense(${e.id})">Skip it</button>
+                                    <button class="btn-approve" onclick="approveExpense(${e.id})">Buy it</button>
+                                </div>
+                            ` : `<div class="queue-item-timer">${getTimeRemaining(e.addedAt)}</div>`}
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="queue-item-amount">${formatCurrency(e.amount)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSpendingCategories() {
+            // Group expenses by category
+            const byCategory = {};
+            state.spentExpenses.forEach(e => {
+                if (!byCategory[e.category]) {
+                    byCategory[e.category] = { total: 0, items: [] };
+                }
+                byCategory[e.category].total += e.amount;
+                byCategory[e.category].items.push(e);
+            });
+
+            // Render bars
+            const barsContainer = document.getElementById('spendingBars');
+            barsContainer.innerHTML = Object.entries(byCategory).map(([cat, data]) => {
+                const color = categoryColors[cat] || '#BDBDBD';
+                const width = (data.total / budget.income) * 100;
+                const label = cat.charAt(0).toUpperCase() + cat.slice(1);
+                return `
+                    <div class="bar-row">
+                        <span class="bar-label">${label}</span>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width: ${width}%; background: linear-gradient(90deg, ${color}, ${color}dd);"></div>
+                        </div>
+                        <span class="bar-amount">€${data.total.toFixed(0)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Render expense details
+            const categoriesContainer = document.getElementById('spendingCategories');
+            categoriesContainer.innerHTML = Object.entries(byCategory).map(([cat, data]) => {
+                const color = categoryColors[cat] || '#BDBDBD';
+                const label = cat.charAt(0).toUpperCase() + cat.slice(1);
+                return `
+                    <div class="expense-category">
+                        <div class="category-header">
+                            <div class="category-title">
+                                <span class="category-dot" style="background: ${color};"></span>
+                                ${label}
+                            </div>
+                            <span class="category-total">€${data.total.toFixed(2)}</span>
+                        </div>
+                        ${data.items.map(e => {
+                            const date = new Date(e.date || e.approvedAt || e.addedAt);
+                            const dateStr = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                            return `
+                                <div class="expense-item" style="background: ${color}15;">
+                                    <span class="expense-name">${e.name} <span class="expense-date">${dateStr}</span></span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span class="expense-amount">€${e.amount.toFixed(2)}</span>
+                                        <button class="expense-delete" onclick="deleteExpense(${e.id})" title="Delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        loadState();
+    </script>
+</body>
+</html>

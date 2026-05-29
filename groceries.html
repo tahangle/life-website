@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Food & Groceries</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-dark);
+        }
+
+        .budget-pill {
+            background: linear-gradient(135deg, var(--sage) 0%, #7BA896 100%);
+            padding: 10px 18px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .budget-pill strong {
+            font-weight: 600;
+        }
+
+        /* Week Navigation */
+        .week-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .week-nav button {
+            background: var(--cream);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .week-nav button:hover {
+            background: var(--sage);
+            color: white;
+        }
+
+        .week-label {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        /* Calendar Grid */
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .week-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .week-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .day-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .day-card.rest-day {
+            background: linear-gradient(135deg, #F3E8FF 0%, #FCE7F3 100%);
+        }
+
+        .day-card.shopping-day {
+            border: 2px solid #0288D1;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .day-info {
+            text-align: left;
+        }
+
+        .day-name {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-dark);
+        }
+
+        .day-date {
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .day-tags {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        .tag {
+            font-size: 0.5rem;
+            padding: 2px 5px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tag-gym { background: #E8F5E9; color: #2E7D32; }
+        .tag-work { background: #E3F2FD; color: #1565C0; }
+        .tag-close { background: #FFCCBC; color: #BF360C; }
+        .tag-off { background: #FCE4EC; color: #C2185B; }
+        .tag-shop { background: #B3E5FC; color: #0277BD; }
+
+        .meal-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meal-slot {
+            background: var(--cream);
+            border-radius: 8px;
+            padding: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meal-slot.leftover {
+            background: var(--lavender-soft);
+            border: 1px dashed var(--lavender);
+        }
+
+        .meal-slot.empty {
+            border: 2px dashed var(--blush);
+            background: transparent;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .meal-name {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .meal-name .icon {
+            margin-right: 4px;
+        }
+
+        .meal-ingredients {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            flex: 1;
+        }
+
+        .ing-tag {
+            font-size: 0.55rem;
+            padding: 2px 5px;
+            background: var(--white);
+            border-radius: 8px;
+            color: var(--text);
+        }
+
+        .ing-tag.protein {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .meal-meta {
+            font-size: 0.6rem;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+
+        .empty-text {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        /* Shopping Section */
+        .shopping-section {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .shopping-trips {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .shop-trip {
+            border: 2px solid var(--sage);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .shop-trip-header {
+            background: var(--sage);
+            color: white;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .shop-trip-date {
+            font-weight: 600;
+        }
+
+        .shop-trip-items {
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .shop-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--soft-pink);
+            font-size: 0.85rem;
+        }
+
+        .shop-item:last-child {
+            border-bottom: none;
+        }
+
+        .shop-item-check {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--blush);
+            border-radius: 50%;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .shop-item.checked .shop-item-check {
+            background: var(--sage);
+            border-color: var(--sage);
+        }
+
+        .shop-item.checked .shop-item-name {
+            text-decoration: line-through;
+            color: var(--text-light);
+        }
+
+        .shop-item-name {
+            flex: 1;
+        }
+
+        .shop-item-note {
+            font-size: 0.65rem;
+            color: var(--sage-dark);
+            background: #E8F5E9;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .no-shopping {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .modal-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .meal-option {
+            padding: 12px;
+            background: var(--cream);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .meal-option:hover {
+            background: var(--soft-pink);
+        }
+
+        .meal-option.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .meal-option-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .meal-option-ing {
+            font-size: 0.7rem;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .meal-option-meta {
+            font-size: 0.65rem;
+            color: var(--text-light);
+        }
+
+        .meal-option-warning {
+            font-size: 0.65rem;
+            color: #C62828;
+            margin-top: 4px;
+        }
+
+        .clear-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--cream);
+            border: none;
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .clear-btn:hover {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header class="page-header">
+            <h1 class="page-title">Food & Groceries</h1>
+            <div class="budget-pill">
+                <strong id="budgetRemaining">€170</strong> ticket resto left
+            </div>
+        </header>
+
+        <div class="week-nav">
+            <button onclick="changeWeek(-1)">←</button>
+            <span class="week-label" id="weekLabel">May 26 - Jun 1</span>
+            <button onclick="changeWeek(1)">→</button>
+        </div>
+
+        <div class="week-grid" id="weekGrid"></div>
+
+        <div class="shopping-section">
+            <div class="section-title">Shopping Days</div>
+            <div class="shopping-trips" id="shoppingTrips"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="mealModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">Pick a meal</span>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <div id="mealOptions"></div>
+            <button class="clear-btn" onclick="clearMeal()">Remove meal</button>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <a href="index.html">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+            </svg>
+            Budget
+        </a>
+        <a href="groceries.html" class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            Food
+        </a>
+        <a href="calendar.html">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Calendar
+        </a>
+    </nav>
+
+    <script>
+        // Work schedule
+        const workSchedule = {
+            '2026-05-04': { type: 'closing' }, '2026-05-06': { type: 'closing' },
+            '2026-05-07': { type: 'closing' }, '2026-05-08': { type: 'closing' },
+            '2026-05-09': { type: 'opening' }, '2026-05-10': { type: 'custom' },
+            '2026-05-11': { type: 'opening' }, '2026-05-12': { type: 'opening' },
+            '2026-05-14': { type: 'closing' }, '2026-05-15': { type: 'closing' },
+            '2026-05-16': { type: 'opening' }, '2026-05-17': { type: 'custom' },
+            '2026-05-18': { type: 'opening' }, '2026-05-19': { type: 'closing' },
+            '2026-05-20': { type: 'closing' }, '2026-05-21': { type: 'opening' },
+            '2026-05-22': { type: 'opening' }, '2026-05-23': { type: 'opening' },
+            '2026-05-24': { type: 'custom' }, '2026-05-25': { type: 'opening' },
+            '2026-05-26': { type: 'opening' }, '2026-05-28': { type: 'opening' },
+            '2026-05-29': { type: 'closing' }, '2026-05-30': { type: 'closing' },
+            '2026-05-31': { type: 'custom' }, '2026-06-01': { type: 'closing' },
+            '2026-06-03': { type: 'custom' }, '2026-06-04': { type: 'closing' },
+            '2026-06-05': { type: 'opening' }, '2026-06-06': { type: 'closing' },
+            '2026-06-08': { type: 'opening' }, '2026-06-09': { type: 'opening' },
+            '2026-06-10': { type: 'closing' }, '2026-06-11': { type: 'opening' },
+            '2026-06-12': { type: 'opening' }, '2026-06-14': { type: 'closing' },
+            '2026-06-15': { type: 'closing' }, '2026-06-16': { type: 'opening' },
+            '2026-06-17': { type: 'opening' }, '2026-06-19': { type: 'closing' },
+            '2026-06-20': { type: 'opening' }, '2026-06-21': { type: 'custom' },
+            '2026-06-22': { type: 'opening' }, '2026-06-24': { type: 'closing' },
+            '2026-06-25': { type: 'closing' }, '2026-06-29': { type: 'closing' },
+            '2026-06-30': { type: 'closing' }
+        };
+
+        // Meals
+        const meals = [
+            { id: "moroccan_chicken", name: "Moroccan chicken + potatoes", protein: "high", prepTime: 25, batchFriendly: true, portions: 2, ingredients: ["chicken breast", "small potatoes", "zucchini", "cumin", "paprika", "olive oil"] },
+            { id: "jambon_pasta", name: "Pasta crème jambon", protein: "medium", prepTime: 20, batchFriendly: false, portions: 1, ingredients: ["integral pasta", "crème fraîche", "jambon sec", "zucchini", "garlic"] },
+            { id: "scrambled_eggs_tomato", name: "Eggs + tomatoes + edam", protein: "high", prepTime: 10, batchFriendly: false, portions: 1, ingredients: ["eggs", "tomatoes", "onion", "edam slices", "bread"] },
+            { id: "fish_potatoes", name: "Fish + potatoes + spinach", protein: "high", prepTime: 25, batchFriendly: false, portions: 1, ingredients: ["colin de alaska", "small potatoes", "canned tomatoes", "spinach", "garlic"] },
+            { id: "chicken_bowl", name: "Chicken bowl + rice + mozza", protein: "high", prepTime: 15, batchFriendly: true, portions: 2, ingredients: ["chicken breast", "integral rice", "mozzarella", "tomatoes", "garlic"] },
+            { id: "eggs_poivron", name: "Eggs + poivron + jambon", protein: "high", prepTime: 10, batchFriendly: false, portions: 1, ingredients: ["eggs", "frozen poivron", "jambon sec", "rice cakes"] },
+            { id: "lemon_chicken_rice", name: "Lemon chicken + rice + spinach", protein: "high", prepTime: 25, batchFriendly: true, portions: 2, ingredients: ["chicken breast", "integral rice", "spinach", "lemon", "garlic", "thyme"] }
+        ];
+
+        // Paris 10ème prices (Franprix/Carrefour City level - expensive area)
+        const prices = {
+            "chicken breast": 5.50,      // ~300g pack
+            "colin de alaska": 4.50,     // frozen fillet
+            "eggs": 2.80,                // 6 eggs
+            "jambon sec": 3.50,          // pack
+            "integral pasta": 2.20,      // 500g
+            "integral rice": 2.80,       // 500g
+            "small potatoes": 2.80,      // bag
+            "bread": 3.20,               // integral loaf
+            "rice cakes": 2.50,          // pack
+            "zucchini": 1.50,            // each
+            "frozen poivron": 3.50,      // bag
+            "spinach": 2.80,             // fresh bag
+            "tomatoes": 2.80,            // 4 pack
+            "onion": 0.90,               // each
+            "canned tomatoes": 1.40,     // can
+            "crème fraîche": 1.90,       // pot
+            "edam slices": 2.80,         // pack
+            "mozzarella": 2.20,          // ball
+            "olive oil": 7.00,           // bottle (already have?)
+            "garlic": 1.50,              // bulb
+            "cumin": 3.50,               // jar (already have?)
+            "paprika": 3.50,             // jar (already have?)
+            "lemon": 0.90,               // each
+            "thyme": 2.20                // bunch
+        };
+
+        // Pantry items you likely already have
+        const pantryItems = ["olive oil", "cumin", "paprika", "garlic"];
+
+        const proteinIngredients = ["chicken breast", "colin de alaska", "eggs", "jambon sec"];
+
+        const mealIcons = {
+            'moroccan_chicken': '🍗', 'jambon_pasta': '🍝', 'scrambled_eggs_tomato': '🍳',
+            'fish_potatoes': '🐟', 'chicken_bowl': '🥗', 'eggs_poivron': '🥚', 'lemon_chicken_rice': '🍋'
+        };
+
+        // State
+        let currentWeekStart = null;
+        let weekData = [];
+        let selectedDayIndex = null;
+
+        // Utils
+        function getDateKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function getWeekStart() {
+            const now = new Date();
+            const day = now.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            const mon = new Date(now);
+            mon.setDate(now.getDate() + diff);
+            mon.setHours(0,0,0,0);
+            return mon;
+        }
+
+        // Init
+        function init() {
+            currentWeekStart = getWeekStart();
+            buildWeek();
+        }
+
+        function buildWeek() {
+            const events = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+            weekData = [];
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                const key = getDateKey(date);
+                const work = workSchedule[key];
+                const gym = events[key]?.gym;
+
+                weekData.push({
+                    date, key,
+                    dayName: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()],
+                    isWorkDay: !!work,
+                    isClosing: work?.type === 'closing',
+                    isGymDay: !!gym,
+                    isRestDay: !work,
+                    isShoppingDay: false,
+                    dinner: null,
+                    isLeftover: false
+                });
+            }
+
+            // Pick 2 shopping days from rest days
+            const restDays = weekData.filter(d => d.isRestDay);
+            if (restDays.length >= 2) {
+                restDays[0].isShoppingDay = true;
+                restDays[restDays.length - 1].isShoppingDay = true;
+            } else if (restDays.length === 1) {
+                restDays[0].isShoppingDay = true;
+            }
+
+            // Save to calendar
+            weekData.forEach(d => {
+                if (!events[d.key]) events[d.key] = {};
+                events[d.key].shopping = d.isShoppingDay;
+            });
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+
+            assignMeals();
+            render();
+        }
+
+        function assignMeals() {
+            const recent = [];
+            for (let i = 0; i < weekData.length; i++) {
+                const day = weekData[i];
+                if (day.dinner || day.isLeftover) continue;
+
+                const valid = meals.filter(m => {
+                    if (day.isGymDay && m.protein !== 'high') return false;
+                    if (day.isClosing && m.prepTime > 15) return false;
+                    if (recent.slice(-4).includes(m.id)) return false;
+                    return true;
+                });
+
+                if (valid.length === 0) continue;
+
+                const pick = day.isRestDay
+                    ? (valid.find(m => m.batchFriendly) || valid[0])
+                    : valid[Math.floor(Math.random() * valid.length)];
+
+                day.dinner = pick;
+                recent.push(pick.id);
+
+                if (pick.batchFriendly && pick.portions > 1 && weekData[i+1]) {
+                    weekData[i+1].dinner = pick;
+                    weekData[i+1].isLeftover = true;
+                }
+            }
+        }
+
+        function changeWeek(delta) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
+            buildWeek();
+        }
+
+        function render() {
+            // Week label
+            const end = new Date(currentWeekStart);
+            end.setDate(end.getDate() + 6);
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            document.getElementById('weekLabel').textContent =
+                `${months[currentWeekStart.getMonth()]} ${currentWeekStart.getDate()} - ${months[end.getMonth()]} ${end.getDate()}`;
+
+            // Grid
+            const grid = document.getElementById('weekGrid');
+            grid.innerHTML = weekData.map((day, i) => {
+                let tags = '';
+                if (day.isGymDay) tags += '<span class="tag tag-gym">GYM</span>';
+                if (day.isClosing) tags += '<span class="tag tag-close">CLOSE</span>';
+                else if (day.isWorkDay) tags += '<span class="tag tag-work">WORK</span>';
+                if (day.isRestDay) tags += '<span class="tag tag-off">OFF</span>';
+                if (day.isShoppingDay) tags += '<span class="tag tag-shop">SHOP</span>';
+
+                let mealHtml = '';
+                if (day.dinner) {
+                    const m = day.dinner;
+                    const icon = mealIcons[m.id] || '🍽️';
+                    const ings = m.ingredients.map(ing =>
+                        `<span class="ing-tag ${proteinIngredients.includes(ing) ? 'protein' : ''}">${ing}</span>`
+                    ).join('');
+
+                    mealHtml = `
+                        <div class="meal-slot ${day.isLeftover ? 'leftover' : ''}">
+                            <div class="meal-name"><span class="icon">${icon}</span>${m.name}${day.isLeftover ? ' <small>(leftover)</small>' : ''}</div>
+                            <div class="meal-ingredients">${ings}</div>
+                            <div class="meal-meta">${m.prepTime}min · ${m.protein} protein</div>
+                        </div>
+                    `;
+                } else {
+                    mealHtml = `<div class="meal-slot empty"><span class="empty-text">+ add meal</span></div>`;
+                }
+
+                return `
+                    <div class="day-card ${day.isRestDay ? 'rest-day' : ''} ${day.isShoppingDay ? 'shopping-day' : ''}" onclick="openModal(${i})">
+                        <div class="day-header">
+                            <div class="day-info">
+                                <div class="day-name">${day.dayName}</div>
+                                <div class="day-date">${day.date.getDate()}</div>
+                            </div>
+                            <div class="day-tags">${tags}</div>
+                        </div>
+                        <div class="meal-content">${mealHtml}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Shopping
+            renderShopping();
+        }
+
+        function renderShopping() {
+            const container = document.getElementById('shoppingTrips');
+            const shopDays = weekData.filter(d => d.isShoppingDay);
+
+            if (shopDays.length === 0) {
+                container.innerHTML = '<div class="no-shopping">No rest days for shopping this week</div>';
+                return;
+            }
+
+            // Collect ingredients (skip pantry items you already have)
+            const needs = {};
+            weekData.forEach((day, i) => {
+                if (!day.dinner || day.isLeftover) return;
+                day.dinner.ingredients.forEach(ing => {
+                    if (pantryItems.includes(ing)) return;
+                    if (!needs[ing]) needs[ing] = { name: ing, forDay: i, price: prices[ing] || 2.00 };
+                });
+            });
+
+            const allIngs = Object.values(needs);
+            const perishable = ['chicken breast', 'colin de alaska', 'spinach', 'tomatoes', 'mozzarella', 'crème fraîche', 'thyme'];
+
+            // Initialize trips
+            const trips = shopDays.map(shopDay => ({
+                day: shopDay,
+                dayIdx: weekData.indexOf(shopDay),
+                items: [],
+                total: 0
+            }));
+
+            // Sort: perishables first, then expensive items (for better distribution)
+            allIngs.sort((a, b) => {
+                const aPerish = perishable.includes(a.name) ? 0 : 1;
+                const bPerish = perishable.includes(b.name) ? 0 : 1;
+                if (aPerish !== bPerish) return aPerish - bPerish;
+                return b.price - a.price;
+            });
+
+            // Smart distribution to stay under €25
+            allIngs.forEach(ing => {
+                let bestTrip = null;
+                let bestScore = -Infinity;
+
+                trips.forEach(trip => {
+                    const daysUntil = ing.forDay - trip.dayIdx;
+                    const wouldBeTotal = trip.total + ing.price;
+
+                    // If over €25, only use if no other option
+                    if (wouldBeTotal > 25) {
+                        const hasAlternative = trips.some(t => t !== trip && t.total + ing.price <= 25);
+                        if (hasAlternative) return;
+                    }
+
+                    let score = 0;
+
+                    // Perishables: must buy close to use
+                    if (perishable.includes(ing.name)) {
+                        if (daysUntil < 0) return; // can't buy after use
+                        if (daysUntil > 4) return; // will spoil
+                        score += 100 - daysUntil * 10;
+                    } else {
+                        // Non-perishables: prefer first trip
+                        score += 50 - trip.dayIdx;
+                    }
+
+                    // Prefer under budget
+                    if (wouldBeTotal <= 25) score += 30;
+                    // Balance trips
+                    score -= trip.total * 0.5;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestTrip = trip;
+                    }
+                });
+
+                if (bestTrip) {
+                    const note = perishable.includes(ing.name)
+                        ? `for ${weekData[ing.forDay].dayName}`
+                        : 'keeps';
+                    bestTrip.items.push({ ...ing, note });
+                    bestTrip.total += ing.price;
+                }
+            });
+
+            // Render
+            container.innerHTML = trips.filter(t => t.items.length > 0).map(trip => `
+                <div class="shop-trip">
+                    <div class="shop-trip-header">
+                        <span class="shop-trip-date">${trip.day.dayName} ${trip.day.date.getDate()}</span>
+                        <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px;">
+                            ~€${trip.total.toFixed(0)} ✓
+                        </span>
+                    </div>
+                    <div class="shop-trip-items">
+                        ${trip.items.map(item => `
+                            <div class="shop-item" onclick="this.classList.toggle('checked')">
+                                <div class="shop-item-check"></div>
+                                <span class="shop-item-name">${item.name}</span>
+                                <span class="shop-item-note">${item.note}</span>
+                                <span style="font-size: 0.7rem; color: var(--text-light);">€${item.price.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('') || '<div class="no-shopping">Add meals to see shopping list</div>';
+        }
+
+        // Modal
+        function openModal(idx) {
+            selectedDayIndex = idx;
+            const day = weekData[idx];
+
+            document.getElementById('modalTitle').textContent = `${day.dayName} ${day.date.getDate()}`;
+
+            let sub = '';
+            if (day.isGymDay) sub += 'GYM day - high protein only. ';
+            if (day.isClosing) sub += 'Closing shift - quick meals (≤15min). ';
+            document.getElementById('modalSubtitle').textContent = sub || 'Pick any meal';
+
+            const recent = weekData.slice(Math.max(0, idx-4), idx).filter(d => d.dinner).map(d => d.dinner.id);
+
+            document.getElementById('mealOptions').innerHTML = meals.map(m => {
+                const icon = mealIcons[m.id] || '🍽️';
+                const isRecent = recent.includes(m.id);
+                const needsProtein = day.isGymDay && m.protein !== 'high';
+                const tooSlow = day.isClosing && m.prepTime > 15;
+                const disabled = isRecent || needsProtein || tooSlow;
+
+                let warn = '';
+                if (isRecent) warn = 'Eaten recently';
+                else if (needsProtein) warn = 'Not enough protein';
+                else if (tooSlow) warn = 'Takes too long';
+
+                return `
+                    <div class="meal-option ${disabled ? 'disabled' : ''}" onclick="${disabled ? '' : `selectMeal('${m.id}')`}">
+                        <div class="meal-option-name">${icon} ${m.name}</div>
+                        <div class="meal-option-ing">${m.ingredients.join(', ')}</div>
+                        <div class="meal-option-meta">${m.prepTime}min · ${m.protein} protein${m.batchFriendly ? ' · makes 2' : ''}</div>
+                        ${warn ? `<div class="meal-option-warning">${warn}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('mealModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('mealModal').classList.remove('active');
+            selectedDayIndex = null;
+        }
+
+        function selectMeal(id) {
+            const meal = meals.find(m => m.id === id);
+            if (!meal || selectedDayIndex === null) return;
+
+            weekData[selectedDayIndex].dinner = meal;
+            weekData[selectedDayIndex].isLeftover = false;
+
+            if (meal.batchFriendly && meal.portions > 1 && weekData[selectedDayIndex + 1]) {
+                weekData[selectedDayIndex + 1].dinner = meal;
+                weekData[selectedDayIndex + 1].isLeftover = true;
+            }
+
+            closeModal();
+            render();
+        }
+
+        function clearMeal() {
+            if (selectedDayIndex === null) return;
+            weekData[selectedDayIndex].dinner = null;
+            weekData[selectedDayIndex].isLeftover = false;
+            closeModal();
+            render();
+        }
+
+        document.getElementById('mealModal').addEventListener('click', e => {
+            if (e.target.id === 'mealModal') closeModal();
+        });
+
+        init();
+    </script>
+</body>
+</html>
