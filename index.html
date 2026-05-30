@@ -597,6 +597,139 @@
             background: #FF8A65;
         }
 
+        /* Revolut Import */
+        .import-section {
+            margin-bottom: 24px;
+        }
+
+        .import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: var(--white);
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .import-header:hover {
+            background: var(--cream);
+        }
+
+        .import-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .import-badge {
+            background: #E3F2FD;
+            color: #1976D2;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .import-content {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .import-content.open {
+            display: block;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--cream);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: var(--white);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--sage);
+            background: #F1F8E9;
+        }
+
+        .drop-zone-text {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .drop-zone-text strong {
+            color: var(--sage);
+        }
+
+        /* Pending transactions */
+        .pending-transactions {
+            margin-top: 16px;
+        }
+
+        .pending-tx {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--white);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px var(--shadow);
+        }
+
+        .pending-tx-info {
+            flex: 1;
+        }
+
+        .pending-tx-merchant {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .pending-tx-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .pending-tx-amount {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0 12px;
+        }
+
+        .pending-tx-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .cat-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .cat-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .cat-btn.food { background: #FFECB3; color: #F57C00; }
+        .cat-btn.coffee { background: #D7CCC8; color: #5D4037; }
+        .cat-btn.drinks { background: #E1BEE7; color: #7B1FA2; }
+        .cat-btn.transport { background: #BBDEFB; color: #1976D2; }
+        .cat-btn.other { background: #ECEFF1; color: #546E7A; }
+        .cat-btn.skip { background: #FFCDD2; color: #C62828; }
+
         /* Warning banner */
         .warning-banner {
             background: #FFF3E0;
@@ -640,6 +773,27 @@
                     <div class="hero-stat-value" id="daysLeft">34</div>
                     <div class="hero-stat-label">days left</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Revolut Import Section -->
+        <div class="import-section">
+            <div class="import-header" onclick="toggleImport()">
+                <div class="import-title">
+                    <span>Import from Revolut</span>
+                    <span class="import-badge" id="pendingCount" style="display: none;">0 to review</span>
+                </div>
+                <span id="importArrow">▼</span>
+            </div>
+            <div class="import-content" id="importContent">
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvInput').click()">
+                    <div class="drop-zone-text">
+                        <strong>Drop CSV here</strong> or tap to upload<br>
+                        <small style="opacity: 0.7;">Revolut → Profile → Statements → Export</small>
+                    </div>
+                    <input type="file" id="csvInput" accept=".csv" style="display: none;" onchange="handleCSV(this.files[0])">
+                </div>
+                <div class="pending-transactions" id="pendingTx"></div>
             </div>
         </div>
 
@@ -941,6 +1095,181 @@
         function getSelectedPaymentMethod() {
             const selected = document.querySelector('input[name="paymentMethod"]:checked');
             return selected ? selected.value : 'cb';
+        }
+
+        // Revolut Import
+        let pendingTransactions = JSON.parse(localStorage.getItem('pendingTransactions') || '[]');
+
+        function toggleImport() {
+            const content = document.getElementById('importContent');
+            const arrow = document.getElementById('importArrow');
+            content.classList.toggle('open');
+            arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
+        }
+
+        // Setup drag and drop
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('dropZone');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                });
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('dragover');
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.name.endsWith('.csv')) {
+                        handleCSV(file);
+                    }
+                });
+            }
+            renderPendingTransactions();
+        });
+
+        function handleCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parseRevolutCSV(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseRevolutCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+            // Find column indices (Revolut format)
+            const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('started'));
+            const descIdx = headers.findIndex(h => h.includes('description') || h.includes('merchant'));
+            const amountIdx = headers.findIndex(h => h.includes('amount'));
+            const typeIdx = headers.findIndex(h => h.includes('type'));
+
+            const newTx = [];
+            const existingIds = new Set(pendingTransactions.map(t => t.id));
+            const processedIds = new Set(state.spentExpenses.map(e => e.revolutId).filter(Boolean));
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                // Parse CSV line (handle quoted fields)
+                const cols = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                const cleaned = cols.map(c => c.replace(/^"|"$/g, '').trim());
+
+                const dateStr = cleaned[dateIdx] || '';
+                const description = cleaned[descIdx] || '';
+                const amount = parseFloat(cleaned[amountIdx]) || 0;
+                const type = cleaned[typeIdx] || '';
+
+                // Skip income, only track expenses (negative amounts or CARD_PAYMENT type)
+                if (amount > 0 || type.toLowerCase().includes('topup') || type.toLowerCase().includes('transfer')) continue;
+
+                const txId = `${dateStr}-${description}-${Math.abs(amount)}`.replace(/\s/g, '');
+
+                // Skip if already processed or pending
+                if (existingIds.has(txId) || processedIds.has(txId)) continue;
+
+                newTx.push({
+                    id: txId,
+                    date: dateStr,
+                    merchant: description,
+                    amount: Math.abs(amount),
+                    suggestedCategory: guessCategory(description)
+                });
+            }
+
+            if (newTx.length > 0) {
+                pendingTransactions = [...newTx, ...pendingTransactions];
+                localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
+                renderPendingTransactions();
+            }
+
+            // Open the import section to show results
+            document.getElementById('importContent').classList.add('open');
+            document.getElementById('importArrow').textContent = '▲';
+        }
+
+        function guessCategory(merchant) {
+            const m = merchant.toLowerCase();
+            if (m.includes('uber') || m.includes('bolt') || m.includes('taxi') || m.includes('ratp') || m.includes('sncf')) return 'transport';
+            if (m.includes('starbucks') || m.includes('cafe') || m.includes('coffee') || m.includes('kitsune')) return 'coffee';
+            if (m.includes('bar') || m.includes('pub') || m.includes('cocktail')) return 'drinks';
+            if (m.includes('restaurant') || m.includes('mcdonald') || m.includes('burger') || m.includes('pizza') || m.includes('sushi')) return 'food';
+            if (m.includes('carrefour') || m.includes('monoprix') || m.includes('franprix') || m.includes('auchan')) return 'food';
+            if (m.includes('zara') || m.includes('h&m') || m.includes('uniqlo') || m.includes('mango') || m.includes('cos')) return 'clothing';
+            if (m.includes('sephora') || m.includes('nocibe') || m.includes('pharmacy') || m.includes('pharmacie')) return 'beauty';
+            return 'other';
+        }
+
+        function renderPendingTransactions() {
+            const container = document.getElementById('pendingTx');
+            const badge = document.getElementById('pendingCount');
+
+            if (pendingTransactions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 20px;">No transactions to review</p>';
+                badge.style.display = 'none';
+                return;
+            }
+
+            badge.textContent = pendingTransactions.length + ' to review';
+            badge.style.display = 'inline';
+
+            container.innerHTML = pendingTransactions.slice(0, 10).map(tx => `
+                <div class="pending-tx">
+                    <div class="pending-tx-info">
+                        <div class="pending-tx-merchant">${tx.merchant}</div>
+                        <div class="pending-tx-date">${tx.date}</div>
+                    </div>
+                    <div class="pending-tx-amount">€${tx.amount.toFixed(2)}</div>
+                    <div class="pending-tx-actions">
+                        <button class="cat-btn food" onclick="categorizeTx('${tx.id}', 'food')">Food</button>
+                        <button class="cat-btn coffee" onclick="categorizeTx('${tx.id}', 'coffee')">Coffee</button>
+                        <button class="cat-btn drinks" onclick="categorizeTx('${tx.id}', 'drinks')">Drinks</button>
+                        <button class="cat-btn transport" onclick="categorizeTx('${tx.id}', 'transport')">Transport</button>
+                        <button class="cat-btn other" onclick="categorizeTx('${tx.id}', 'other')">Other</button>
+                        <button class="cat-btn skip" onclick="skipTx('${tx.id}')">×</button>
+                    </div>
+                </div>
+            `).join('') + (pendingTransactions.length > 10 ? `<p style="text-align: center; color: var(--text-light);">+ ${pendingTransactions.length - 10} more</p>` : '');
+        }
+
+        function categorizeTx(txId, category) {
+            const tx = pendingTransactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            // Add to expenses
+            const expense = {
+                id: Date.now(),
+                revolutId: txId,
+                name: tx.merchant,
+                amount: tx.amount,
+                category: category,
+                date: new Date(tx.date).toISOString(),
+                addedAt: new Date().toISOString(),
+                paymentMethod: 'cb',
+                approvedAt: new Date().toISOString()
+            };
+
+            state.spentExpenses.push(expense);
+            state.totalSpent += tx.amount;
+
+            // Remove from pending
+            pendingTransactions = pendingTransactions.filter(t => t.id !== txId);
+            localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
+
+            saveState();
+            render();
+            renderPendingTransactions();
+        }
+
+        function skipTx(txId) {
+            pendingTransactions = pendingTransactions.filter(t => t.id !== txId);
+            localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
+            renderPendingTransactions();
         }
 
         function saveState() {
