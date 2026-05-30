@@ -686,13 +686,13 @@
                     <!-- Spending progress bar -->
                     <div class="income-bar">
                         <div class="bar-row">
-                            <span class="bar-label">Spent</span>
-                            <div class="bar-track" style="background: linear-gradient(90deg, var(--sage) 0%, #7BA896 100%);">
-                                <div class="bar-fill" id="spentBar" style="width: 0%; background: linear-gradient(90deg, #FF5252, #C62828);"></div>
+                            <span class="bar-label">Used</span>
+                            <div class="bar-track">
+                                <div class="bar-fill" id="spentBar" style="width: 0%; background: linear-gradient(90deg, #B8D4E3, #9CC0D4);"></div>
                             </div>
                             <span class="bar-amount" id="spentAmount">€0</span>
                         </div>
-                        <div class="income-label" id="spentLabel">0% of €2,152 paycheck spent</div>
+                        <div class="income-label" id="spentLabel">0% of €2,152 paycheck used</div>
                     </div>
 
                     <!-- Category bars (fixed) -->
@@ -891,13 +891,15 @@
             hold: 210,
             cigarettes: 0, // Will be calculated based on days
             baseAvailable: 996.86,
-            // Pay period: end of current month
-            payPeriodEnd: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+            // Pay period: paid end of May, budget runs through end of June
+            payPeriodEnd: new Date(2026, 5, 30) // June 30, 2026
         };
 
         function getDaysLeft() {
             const today = new Date();
-            const end = budget.payPeriodEnd;
+            today.setHours(0, 0, 0, 0); // Start of today
+            const end = new Date(budget.payPeriodEnd);
+            end.setHours(23, 59, 59, 999); // End of last day
             const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
             return Math.max(1, diff);
         }
