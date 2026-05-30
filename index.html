@@ -50,6 +50,9 @@
                 grid-template-columns: 1fr;
                 text-align: center;
             }
+            .hero-stats {
+                justify-content: center;
+            }
         }
 
         .hero-available {
@@ -67,6 +70,7 @@
         .hero-stats {
             display: flex;
             gap: 30px;
+            justify-content: flex-end;
         }
 
         .hero-stat {
@@ -162,6 +166,7 @@
         .bar-subscriptions { background: linear-gradient(90deg, #B8D4E3, #9CC0D4); }
         .bar-debt { background: linear-gradient(90deg, #D4B8E3, #C4A5D9); }
         .bar-onhold { background: linear-gradient(90deg, #FFD699, #FFC266); }
+        .bar-cigarettes { background: linear-gradient(90deg, #A1887F, #8D6E63); }
         .bar-spent { background: linear-gradient(90deg, #FF8A80, #FF5252); }
 
         .bar-amount {
@@ -555,6 +560,43 @@
             color: #C62828;
         }
 
+        /* Payment method toggle */
+        .payment-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .toggle-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--cream);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-option:has(input:checked) {
+            background: var(--sage);
+            color: white;
+        }
+
+        .toggle-option input {
+            display: none;
+        }
+
+        .toggle-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .toggle-option:has(input[value="ticket"]:checked) {
+            background: #FF8A65;
+        }
+
         /* Warning banner */
         .warning-banner {
             background: #FFF3E0;
@@ -585,7 +627,7 @@
 
         <!-- Hero: Available money -->
         <div class="hero-section" id="heroSection">
-            <div>
+            <div class="hero-main">
                 <div class="hero-available" id="availableAmount">€996.86</div>
                 <div class="hero-label">free to spend</div>
             </div>
@@ -595,10 +637,44 @@
                     <div class="hero-stat-label">per day</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="hero-stat-value">34</div>
+                    <div class="hero-stat-value" id="daysLeft">34</div>
                     <div class="hero-stat-label">days left</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Quick expense input - right after hero -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">Log an expense</div>
+            <textarea class="input" id="expenseText" rows="2" placeholder="e.g. 15€ lunch with friends, 5€ coffee at kitsune" style="resize: none; font-family: inherit; margin-bottom: 12px;"></textarea>
+
+            <!-- Payment method toggle -->
+            <div class="payment-toggle">
+                <label class="toggle-option">
+                    <input type="radio" name="paymentMethod" value="cb" checked>
+                    <span class="toggle-label">CB (Carte Bancaire)</span>
+                </label>
+                <label class="toggle-option">
+                    <input type="radio" name="paymentMethod" value="ticket">
+                    <span class="toggle-label">Ticket Resto</span>
+                </label>
+            </div>
+
+            <div id="parsedPreview" style="display: none; margin-top: 12px; padding: 12px; background: var(--cream); border-radius: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-light); margin-bottom: 8px;">I understood:</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div id="parsedName" style="font-weight: 500;"></div>
+                        <div id="parsedMeta" style="font-size: 0.75rem; color: var(--text-light);"></div>
+                    </div>
+                    <div id="parsedAmount" style="font-size: 1.2rem; font-weight: 600;"></div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="btn" style="flex: 1; background: var(--sage);" onclick="confirmExpense(false)">Add to Queue (3 days)</button>
+                <button class="btn" style="flex: 1; background: #FF8A65;" onclick="confirmExpense(true)">Log Now</button>
+            </div>
+            <div id="dailyFeedback" class="daily-feedback"></div>
         </div>
 
         <div class="main-layout">
@@ -648,6 +724,13 @@
                                 <div class="bar-fill bar-onhold" style="width: 9.8%;"></div>
                             </div>
                             <span class="bar-amount">€210</span>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Cigarettes</span>
+                            <div class="bar-track">
+                                <div class="bar-fill bar-cigarettes" id="cigarettesBar" style="width: 0%;"></div>
+                            </div>
+                            <span class="bar-amount" id="cigarettesAmount">€0</span>
                         </div>
                         <!-- Dynamic spending categories added here -->
                         <div id="spendingBars"></div>
@@ -737,34 +820,6 @@
 
             <!-- Right: Spending control -->
             <div>
-                <!-- Smart expense input -->
-                <div class="card">
-                    <div class="card-title">Log an expense</div>
-                    <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px;">
-                        Just type naturally, I'll figure it out
-                    </p>
-                    <textarea class="input" id="expenseText" rows="2" placeholder="e.g. yesterday spent 15€ on lunch with friends" style="resize: none; font-family: inherit;"></textarea>
-                    <div id="parsedPreview" style="display: none; margin-top: 12px; padding: 12px; background: var(--cream); border-radius: 10px;">
-                        <div style="font-size: 0.75rem; color: var(--text-light); margin-bottom: 8px;">I understood:</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div id="parsedName" style="font-weight: 500;"></div>
-                                <div id="parsedMeta" style="font-size: 0.75rem; color: var(--text-light);"></div>
-                            </div>
-                            <div id="parsedAmount" style="font-size: 1.2rem; font-weight: 600;"></div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 12px;">
-                        <button class="btn" style="flex: 1; background: var(--sage);" onclick="confirmExpense(false)">Add to Queue (3 days)</button>
-                        <button class="btn" style="flex: 1; background: #FF8A65;" onclick="confirmExpense(true)">Log Now</button>
-                    </div>
-                    <div id="dailyFeedback" class="daily-feedback"></div>
-                    <p style="font-size: 0.7rem; color: var(--text-light); margin-top: 8px; text-align: center;">
-                        "Add to Queue" = wait 3 days before it counts (impulse control)<br>
-                        "Log Now" = already spent, add immediately
-                    </p>
-                </div>
-
                 <!-- Waiting queue -->
                 <div class="card" style="margin-top: 20px;">
                     <div class="card-title">Waiting Queue</div>
@@ -830,16 +885,38 @@
     <script>
         const budget = {
             income: 2152,
-            fixedExpenses: 945.14,
-            onHold: 210,
-            baseAvailable: 996.86
+            housing: 654,
+            subscriptions: 141.14,
+            debt: 150,
+            hold: 210,
+            cigarettes: 0, // Will be calculated based on days
+            baseAvailable: 996.86,
+            // Pay period: end of current month
+            payPeriodEnd: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
         };
+
+        function getDaysLeft() {
+            const today = new Date();
+            const end = budget.payPeriodEnd;
+            const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+            return Math.max(1, diff);
+        }
+
+        function getCigaretteCost() {
+            // 1 pack every 2 days, ~€12 per pack
+            const daysLeft = getDaysLeft();
+            const packsNeeded = Math.ceil(daysLeft / 2);
+            return packsNeeded * 12;
+        }
 
         let state = {
             waitingQueue: [],
-            spentExpenses: [],
-            totalSpent: 0,
-            wishlist: []
+            spentExpenses: [],       // CB expenses
+            ticketRestoExpenses: [], // Ticket resto expenses (food related)
+            totalSpent: 0,           // Total CB spent
+            totalTicketResto: 0,     // Total ticket resto spent
+            wishlist: [],
+            outsidePurchases: []     // Food items bought outside the grocery list
         };
 
         function loadState() {
@@ -849,11 +926,19 @@
                 state = {
                     waitingQueue: parsed.waitingQueue || [],
                     spentExpenses: parsed.spentExpenses || [],
+                    ticketRestoExpenses: parsed.ticketRestoExpenses || [],
                     totalSpent: parsed.totalSpent || 0,
-                    wishlist: parsed.wishlist || []
+                    totalTicketResto: parsed.totalTicketResto || 0,
+                    wishlist: parsed.wishlist || [],
+                    outsidePurchases: parsed.outsidePurchases || []
                 };
             }
             render();
+        }
+
+        function getSelectedPaymentMethod() {
+            const selected = document.querySelector('input[name="paymentMethod"]:checked');
+            return selected ? selected.value : 'cb';
         }
 
         function saveState() {
@@ -990,20 +1075,28 @@
         }
 
         // Live preview as user types
-        document.getElementById('expenseText').addEventListener('input', function() {
-            const parsed = parseExpenseText(this.value);
+        function updatePreview() {
+            const text = document.getElementById('expenseText').value;
+            const parsed = parseExpenseText(text);
             const preview = document.getElementById('parsedPreview');
+            const paymentMethod = getSelectedPaymentMethod();
 
             if (parsed) {
                 parsedExpense = parsed;
                 document.getElementById('parsedName').textContent = parsed.description;
-                document.getElementById('parsedMeta').textContent = `${parsed.category} • ${parsed.date.toLocaleDateString()}`;
+                const methodLabel = paymentMethod === 'ticket' ? 'Ticket Resto' : 'CB';
+                document.getElementById('parsedMeta').textContent = `${parsed.category} • ${methodLabel} • ${parsed.date.toLocaleDateString()}`;
                 document.getElementById('parsedAmount').textContent = formatCurrency(parsed.amount);
                 preview.style.display = 'block';
             } else {
                 parsedExpense = null;
                 preview.style.display = 'none';
             }
+        }
+
+        document.getElementById('expenseText').addEventListener('input', updatePreview);
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+            radio.addEventListener('change', updatePreview);
         });
 
         function getTodaySpending() {
@@ -1013,21 +1106,47 @@
                 .reduce((sum, e) => sum + e.amount, 0);
         }
 
-        function showDailyFeedback(expenseAmount) {
-            const available = getAvailable();
-            const dailyLimit = available / 34;
-            const todaySpent = getTodaySpending();
+        function getTodayTicketRestoSpending() {
+            const today = new Date().toDateString();
+            return state.ticketRestoExpenses
+                .filter(e => new Date(e.date || e.approvedAt).toDateString() === today)
+                .reduce((sum, e) => sum + e.amount, 0);
+        }
 
+        function showDailyFeedback(expenseAmount, paymentMethod) {
             const feedback = document.getElementById('dailyFeedback');
 
-            if (todaySpent > dailyLimit) {
-                const over = todaySpent - dailyLimit;
-                feedback.innerHTML = `<span class="feedback-bad">Over daily limit by €${over.toFixed(2)}</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} limit)`;
-                feedback.className = 'daily-feedback over';
+            if (paymentMethod === 'ticket') {
+                // Ticket resto - €25 daily limit
+                const todaySpent = getTodayTicketRestoSpending();
+                const dailyLimit = 25;
+
+                if (todaySpent > dailyLimit) {
+                    const over = todaySpent - dailyLimit;
+                    feedback.innerHTML = `<span class="feedback-bad">Over ticket resto limit by €${over.toFixed(2)}</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} daily)`;
+                    feedback.className = 'daily-feedback over';
+                } else {
+                    const remaining = dailyLimit - todaySpent;
+                    feedback.innerHTML = `<span class="feedback-good">€${remaining.toFixed(2)} ticket resto left today</span>`;
+                    feedback.className = 'daily-feedback ok';
+                }
             } else {
-                const remaining = dailyLimit - todaySpent;
-                feedback.innerHTML = `<span class="feedback-good">€${remaining.toFixed(2)} left today</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} limit)`;
-                feedback.className = 'daily-feedback ok';
+                // CB - personal budget limit
+                const daysLeft = getDaysLeft();
+                const cigaretteBudget = getCigaretteCost();
+                const available = getAvailable() - cigaretteBudget;
+                const dailyLimit = available / daysLeft;
+                const todaySpent = getTodaySpending();
+
+                if (todaySpent > dailyLimit) {
+                    const over = todaySpent - dailyLimit;
+                    feedback.innerHTML = `<span class="feedback-bad">Over daily CB limit by €${over.toFixed(2)}</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} limit)`;
+                    feedback.className = 'daily-feedback over';
+                } else {
+                    const remaining = dailyLimit - todaySpent;
+                    feedback.innerHTML = `<span class="feedback-good">€${remaining.toFixed(2)} CB left today</span> (spent €${todaySpent.toFixed(2)} / €${dailyLimit.toFixed(2)} limit)`;
+                    feedback.className = 'daily-feedback ok';
+                }
             }
 
             feedback.style.display = 'block';
@@ -1048,21 +1167,44 @@
                 return;
             }
 
+            const paymentMethod = getSelectedPaymentMethod();
+            const isFoodRelated = ['food', 'coffee', 'snacks', 'drinks'].includes(parsedExpense.category);
+
             const expense = {
                 id: Date.now(),
                 name: parsedExpense.description,
                 amount: parsedExpense.amount,
                 category: parsedExpense.category,
                 date: parsedExpense.date.toISOString(),
-                addedAt: new Date().toISOString()
+                addedAt: new Date().toISOString(),
+                paymentMethod: paymentMethod
             };
 
             if (immediate) {
-                // Log immediately
-                state.spentExpenses.push({ ...expense, approvedAt: expense.date });
-                state.totalSpent += expense.amount;
+                if (paymentMethod === 'ticket') {
+                    // Ticket resto - track separately, deduct from groceries budget
+                    state.ticketRestoExpenses.push({ ...expense, approvedAt: expense.date });
+                    state.totalTicketResto += expense.amount;
+
+                    // If it's a food item, add to outside purchases for groceries tracking
+                    if (isFoodRelated && parsedExpense.category !== 'drinks') {
+                        state.outsidePurchases.push({
+                            id: expense.id,
+                            name: expense.name,
+                            amount: expense.amount,
+                            date: expense.date
+                        });
+                    }
+
+                    // Save to shared storage for groceries page
+                    syncTicketRestoToGroceries();
+                } else {
+                    // CB - normal budget tracking
+                    state.spentExpenses.push({ ...expense, approvedAt: expense.date });
+                    state.totalSpent += expense.amount;
+                }
             } else {
-                // Add to waiting queue
+                // Add to waiting queue with payment method
                 state.waitingQueue.push(expense);
             }
 
@@ -1076,21 +1218,49 @@
 
             // Show daily limit feedback
             if (immediate) {
-                showDailyFeedback(expense.amount);
+                showDailyFeedback(expense.amount, paymentMethod);
             }
+        }
+
+        function syncTicketRestoToGroceries() {
+            // Save ticket resto data to shared localStorage for groceries page
+            const ticketRestoData = {
+                expenses: state.ticketRestoExpenses,
+                total: state.totalTicketResto,
+                outsidePurchases: state.outsidePurchases
+            };
+            localStorage.setItem('ticketRestoData', JSON.stringify(ticketRestoData));
         }
 
         function approveExpense(id) {
             const item = state.waitingQueue.find(e => e.id === id);
             if (!item) return;
 
-            const available = getAvailable();
-            if (item.amount > available) {
-                if (!confirm(`This is €${(item.amount - available).toFixed(2)} over budget! Continue?`)) return;
+            const paymentMethod = item.paymentMethod || 'cb';
+            const isFoodRelated = ['food', 'coffee', 'snacks', 'drinks'].includes(item.category);
+
+            if (paymentMethod === 'ticket') {
+                state.ticketRestoExpenses.push({ ...item, approvedAt: new Date().toISOString() });
+                state.totalTicketResto += item.amount;
+
+                if (isFoodRelated && item.category !== 'drinks') {
+                    state.outsidePurchases.push({
+                        id: item.id,
+                        name: item.name,
+                        amount: item.amount,
+                        date: item.date
+                    });
+                }
+                syncTicketRestoToGroceries();
+            } else {
+                const available = getAvailable();
+                if (item.amount > available) {
+                    if (!confirm(`This is €${(item.amount - available).toFixed(2)} over budget! Continue?`)) return;
+                }
+                state.spentExpenses.push({ ...item, approvedAt: new Date().toISOString() });
+                state.totalSpent += item.amount;
             }
 
-            state.spentExpenses.push({ ...item, approvedAt: new Date().toISOString() });
-            state.totalSpent += item.amount;
             state.waitingQueue = state.waitingQueue.filter(e => e.id !== id);
             saveState();
             render();
@@ -1269,20 +1439,28 @@
         };
 
         function render() {
-            const available = getAvailable();
-            const perDay = available / 34;
+            const daysLeft = getDaysLeft();
+            const cigaretteBudget = getCigaretteCost();
+            const available = getAvailable() - cigaretteBudget;
+            const perDay = available / daysLeft;
 
             // Hero
-            document.getElementById('availableAmount').textContent = formatCurrency(available);
-            document.getElementById('perDay').textContent = formatCurrency(perDay);
+            document.getElementById('availableAmount').textContent = formatCurrency(Math.max(0, available));
+            document.getElementById('perDay').textContent = formatCurrency(Math.max(0, perDay));
+            document.getElementById('daysLeft').textContent = daysLeft;
 
             const hero = document.getElementById('heroSection');
             hero.className = 'hero-section';
             if (available < 100) hero.classList.add('danger');
             else if (available < 300) hero.classList.add('warning');
 
+            // Update cigarettes bar
+            const cigarettePercent = (cigaretteBudget / budget.income) * 100;
+            document.getElementById('cigarettesBar').style.width = cigarettePercent + '%';
+            document.getElementById('cigarettesAmount').textContent = '€' + Math.round(cigaretteBudget);
+
             // Spending progress bar - shows how much of paycheck is spent
-            const totalCommitted = budget.housing + budget.subscriptions + budget.debt + budget.hold;
+            const totalCommitted = budget.housing + budget.subscriptions + budget.debt + budget.hold + cigaretteBudget;
             const totalSpentAll = totalCommitted + state.totalSpent;
             const spentPercent = Math.min((totalSpentAll / budget.income) * 100, 100);
             document.getElementById('spentBar').style.width = spentPercent + '%';

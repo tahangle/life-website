@@ -442,6 +442,78 @@
             background: #FFEBEE;
             color: #C62828;
         }
+
+        /* Ticket Resto Status */
+        .ticket-status {
+            background: var(--white);
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ticket-today {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ticket-label {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .ticket-value {
+            font-weight: 600;
+            color: var(--sage);
+        }
+
+        .ticket-value.over {
+            color: #C62828;
+        }
+
+        .ticket-spent {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Outside Purchases */
+        .outside-purchases {
+            background: #FFF3E0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .outside-purchases .section-title {
+            color: #E65100;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .outside-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .outside-item-name {
+            color: var(--text-dark);
+        }
+
+        .outside-item-amount {
+            color: #E65100;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -449,9 +521,24 @@
         <header class="page-header">
             <h1 class="page-title">Food & Groceries</h1>
             <div class="budget-pill">
-                <strong id="budgetRemaining">€170</strong> ticket resto left
+                <strong id="budgetRemaining">€25</strong> ticket resto today
             </div>
         </header>
+
+        <!-- Today's Ticket Resto Status -->
+        <div class="ticket-status" id="ticketStatus">
+            <div class="ticket-today">
+                <span class="ticket-label">Today's limit:</span>
+                <span class="ticket-value" id="ticketTodayLeft">€25.00 left</span>
+            </div>
+            <div class="ticket-spent" id="ticketTodaySpent"></div>
+        </div>
+
+        <!-- Outside Purchases (food bought not on grocery list) -->
+        <div class="outside-purchases" id="outsidePurchases" style="display: none;">
+            <div class="section-title">Bought Outside List</div>
+            <div id="outsideList"></div>
+        </div>
 
         <div class="week-nav">
             <button onclick="changeWeek(-1)">←</button>
@@ -503,6 +590,61 @@
     </nav>
 
     <script>
+        // Ticket Resto Integration
+        function loadTicketRestoData() {
+            const saved = localStorage.getItem('ticketRestoData');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return { expenses: [], total: 0, outsidePurchases: [] };
+        }
+
+        function updateTicketRestoDisplay() {
+            const data = loadTicketRestoData();
+            const today = new Date().toDateString();
+
+            // Calculate today's spending
+            const todayExpenses = data.expenses.filter(e =>
+                new Date(e.date || e.approvedAt).toDateString() === today
+            );
+            const todaySpent = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const todayLeft = Math.max(0, 25 - todaySpent);
+
+            // Update header pill
+            document.getElementById('budgetRemaining').textContent = '€' + todayLeft.toFixed(0);
+
+            // Update status bar
+            const leftEl = document.getElementById('ticketTodayLeft');
+            leftEl.textContent = '€' + todayLeft.toFixed(2) + ' left';
+            leftEl.className = 'ticket-value' + (todayLeft <= 0 ? ' over' : '');
+
+            // Show today's expenses
+            const spentEl = document.getElementById('ticketTodaySpent');
+            if (todayExpenses.length > 0) {
+                spentEl.innerHTML = todayExpenses.map(e =>
+                    `<span style="margin-right: 8px;">${e.name}: €${e.amount.toFixed(2)}</span>`
+                ).join('');
+            } else {
+                spentEl.textContent = 'No ticket resto spent today';
+            }
+
+            // Show outside purchases
+            const outsideSection = document.getElementById('outsidePurchases');
+            const outsideList = document.getElementById('outsideList');
+
+            if (data.outsidePurchases && data.outsidePurchases.length > 0) {
+                outsideSection.style.display = 'block';
+                outsideList.innerHTML = data.outsidePurchases.map(p => `
+                    <div class="outside-item">
+                        <span class="outside-item-name">${p.name}</span>
+                        <span class="outside-item-amount">€${p.amount.toFixed(2)}</span>
+                    </div>
+                `).join('');
+            } else {
+                outsideSection.style.display = 'none';
+            }
+        }
+
         // Work schedule
         const workSchedule = {
             '2026-05-04': { type: 'closing' }, '2026-05-06': { type: 'closing' },
@@ -603,6 +745,7 @@
         // Init
         function init() {
             currentWeekStart = getWeekStart();
+            updateTicketRestoDisplay();
             buildWeek();
         }
 
