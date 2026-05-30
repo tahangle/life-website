@@ -760,6 +760,9 @@
                 const work = workSchedule[key];
                 const gym = events[key]?.gym;
 
+                // Read shopping from calendar events (set in Calendar page)
+                const shopping = events[key]?.shopping;
+
                 weekData.push({
                     date, key,
                     dayName: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()],
@@ -767,27 +770,11 @@
                     isClosing: work?.type === 'closing',
                     isGymDay: !!gym,
                     isRestDay: !work,
-                    isShoppingDay: false,
+                    isShoppingDay: !!shopping, // Read from calendar
                     dinner: null,
                     isLeftover: false
                 });
             }
-
-            // Pick 2 shopping days from rest days
-            const restDays = weekData.filter(d => d.isRestDay);
-            if (restDays.length >= 2) {
-                restDays[0].isShoppingDay = true;
-                restDays[restDays.length - 1].isShoppingDay = true;
-            } else if (restDays.length === 1) {
-                restDays[0].isShoppingDay = true;
-            }
-
-            // Save to calendar
-            weekData.forEach(d => {
-                if (!events[d.key]) events[d.key] = {};
-                events[d.key].shopping = d.isShoppingDay;
-            });
-            localStorage.setItem('calendarEvents', JSON.stringify(events));
 
             assignMeals();
             render();
@@ -887,7 +874,7 @@
             const shopDays = weekData.filter(d => d.isShoppingDay);
 
             if (shopDays.length === 0) {
-                container.innerHTML = '<div class="no-shopping">No rest days for shopping this week</div>';
+                container.innerHTML = '<div class="no-shopping">No shopping days set. <a href="calendar.html" style="color: var(--sage); text-decoration: underline;">Set them in Calendar</a></div>';
                 return;
             }
 

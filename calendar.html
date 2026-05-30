@@ -543,6 +543,16 @@
                 <div class="section-divider">Other</div>
                 <div class="toggle-item">
                     <div class="toggle-label">
+                        <div class="toggle-color" style="background: #4CAF50;"></div>
+                        <span class="toggle-text">Shopping Trip</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleShopping" onchange="saveDay()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-item">
+                    <div class="toggle-label">
                         <div class="toggle-color" style="background: var(--mealprep);"></div>
                         <span class="toggle-text">Meal Prep</span>
                     </div>
@@ -740,6 +750,7 @@
             document.getElementById('btnLower2').classList.toggle('active', dayEvents.gym === 'lower2');
             document.getElementById('btnCourse').classList.toggle('active', dayEvents.gym === 'course');
 
+            document.getElementById('toggleShopping').checked = dayEvents.shopping || false;
             document.getElementById('toggleMealPrep').checked = dayEvents.mealprep || false;
 
             document.getElementById('dayModal').classList.add('active');
@@ -773,11 +784,12 @@
             selectedDate = null;
         }
 
-        // Save day (for meal prep toggle)
+        // Save day (for toggles)
         function saveDay() {
             if (!selectedDate) return;
             if (!events[selectedDate]) events[selectedDate] = {};
 
+            events[selectedDate].shopping = document.getElementById('toggleShopping').checked;
             events[selectedDate].mealprep = document.getElementById('toggleMealPrep').checked;
 
             saveEvents();
